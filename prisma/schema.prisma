@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource newdb {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model vas_postpaid {
+  id                                                   Int     @id @default(autoincrement())
+  Proizvod                                             String  @newdb.VarChar(255)
+  Mesec_pruzanja_usluge                                String  @newdb.VarChar(10)
+  Jedinicna_cena                                       Decimal @newdb.Decimal(15, 2)
+  Broj_transakcija                                     Int
+  Fakturisan_iznos                                     Decimal @newdb.Decimal(15, 2)
+  Fakturisan_korigovan_iznos                           Decimal @newdb.Decimal(15, 2)
+  Naplacen_iznos                                       Decimal @newdb.Decimal(15, 2)
+  Kumulativ_naplacenih_iznosa                          Decimal @newdb.Decimal(15, 2)
+  Nenaplacen_iznos                                     Decimal @newdb.Decimal(15, 2)
+  Nenaplacen_korigovan_iznos                           Decimal @newdb.Decimal(15, 2)
+  Storniran_iznos_u_tekucem_mesecu_iz_perioda_pracenja Decimal @map("Storniran_iznos_u_tekucem_mesecu_iz_perioda_pracenja") @newdb.Decimal(15, 2)
+  Otkazan_iznos                                        Decimal @newdb.Decimal(15, 2)
+  Kumulativ_otkazanih_iznosa                           Decimal @newdb.Decimal(15, 2)
+  Iznos_za_prenos_sredstava_                           Decimal @map("Iznos_za_prenos_sredstava*") @newdb.Decimal(15, 2)
+  Provajder                                            String?
+  userId                                               Int?
+  user                                                 users?  @relation(fields: [userId], references: [id])
+
+  @@unique([Proizvod, Mesec_pruzanja_usluge, Provajder], map: "unique_product_date")
+}
+
+model HumanitarniUgovori {
+  id                      Int      @id @default(autoincrement())
+  kratkiBroj              String   @unique @newdb.VarChar(20)
+  humanitarnaOrganizacija String   @newdb.VarChar(255)
+  ugovor                  String   @newdb.VarChar(255)
+  datumPocetka            DateTime
+  datumIstekka            DateTime
+  telefon                 String?  @newdb.VarChar(20)
+  email                   String?  @newdb.VarChar(255)
+  pib                     String?  @newdb.VarChar(20)
+  racun                   String?  @newdb.VarChar(50)
+  banka                   String?  @newdb.VarChar(100)
+  mb                      String?  @newdb.VarChar(20)
+  userId                  Int?
+  updatedUserId           Int?
+  aneks_1                 String?
+  aneks_2                 String?
+  aneks_3                 String?
+  aneks_4                 String?
+  aneks_5                 String?
+  aneks_6                 String?
+  user                    users?   @relation(fields: [userId], references: [id])
+}
+
+model HumanitarniUgovoriHistory {
+  id                          Int       @id @default(autoincrement())
+  originalId                  Int
+  operationType               String
+  datumPromene                DateTime  @default(now())
+  humanitarnaOrganizacija_old String?   @newdb.VarChar(255)
+  humanitarnaOrganizacija_new String?   @newdb.VarChar(255)
+  ugovor_old                  String?   @map("ugovor_old") @newdb.VarChar(255)
+  ugovor_new                  String?   @map("ugovor_new") @newdb.VarChar(255)
+  datumPocetka_old            DateTime? @newdb.Date
+  datumPocetka_new            DateTime? @newdb.Date
+  datumIstekka_old            DateTime? @newdb.Date
+  datumIstekka_new            DateTime? @newdb.Date
+  kratkiBroj_old              String?   @map("kratkiBroj_old") @newdb.VarChar(50)
+  kratkiBroj_new              String?   @map("kratkiBroj_new") @newdb.VarChar(50)
+  telefon_old                 String?   @map("telefon_old") @newdb.VarChar(50)
+  telefon_new                 String?   @map("telefon_new") @newdb.VarChar(50)
+  email_old                   String?   @map("email_old") @newdb.VarChar(255)
+  email_new                   String?   @map("email_new") @newdb.VarChar(255)
+  pib_old                     String?   @map("pib_old") @newdb.VarChar(20)
+  pib_new                     String?   @map("pib_new") @newdb.VarChar(20)
+  racun_old                   String?   @map("racun_old") @newdb.VarChar(50)
+  racun_new                   String?   @map("racun_new") @newdb.VarChar(50)
+  banka_old                   String?   @map("banka_old") @newdb.VarChar(255)
+  banka_new                   String?   @map("banka_new") @newdb.VarChar(255)
+  mb_old                      String?   @map("mb_old") @newdb.VarChar(20)
+  mb_new                      String?   @map("mb_new") @newdb.VarChar(20)
+  aneks_1_new                 String?   @map("aneks_1_new") @newdb.VarChar(255)
+  aneks_1_old                 String?   @map("aneks_1_old") @newdb.VarChar(255)
+  aneks_2_new                 String?   @map("aneks_2_new") @newdb.VarChar(255)
+  aneks_2_old                 String?   @map("aneks_2_old") @newdb.VarChar(255)
+  aneks_3_new                 String?   @map("aneks_3_new") @newdb.VarChar(255)
+  aneks_3_old                 String?   @map("aneks_3_old") @newdb.VarChar(255)
+  aneks_4_new                 String?   @map("aneks_4_new") @newdb.VarChar(255)
+  aneks_4_old                 String?   @map("aneks_4_old") @newdb.VarChar(255)
+  aneks_5_new                 String?   @map("aneks_5_new") @newdb.VarChar(255)
+  aneks_5_old                 String?   @map("aneks_5_old") @newdb.VarChar(255)
+  aneks_6_new                 String?   @map("aneks_6_new") @newdb.VarChar(255)
+  aneks_6_old                 String?   @map("aneks_6_old") @newdb.VarChar(255)
+  userId                      Int?
+  authorId                    Int?
+  author                      users?    @relation("HistoryAuthor", fields: [authorId], references: [id])
+  updatedById                 Int?
+  updatedBy                   users?    @relation("HistoryUpdater", fields: [updatedById], references: [id])
+
+  @@index([originalId], map: "idx_history_original_id")
+}
+
+model users {
+  id                 Int           @id @default(autoincrement())
+  name               String?
+  email              String        @unique @newdb.VarChar(255)
+  emailVerified      DateTime?     @default(now()) @map("email_verified") // Ново поле
+  password           String        @newdb.VarChar(255)
+  role               String?       @default("user") @newdb.VarChar(50)
+  created_by         Int?
+  created_at         DateTime?     @default(now()) @newdb.Timestamptz(6)
+  updated_at         DateTime?     @default(now()) @newdb.Timestamptz(6)
+  image              String?       @default("") @newdb.VarChar(255)
+  lastlogin          DateTime?     @default(now()) @newdb.Timestamp(6)
+  
+  // NextAuth релације (обавезно)
+  accounts           Account[]
+  sessions           Session[]
+
+  // Ваши кастом релације (задржати)
+  HumanitarniUgovori HumanitarniUgovori[]
+  vas_postpaid       vas_postpaid[]
+  vas_servisi        vas_servisi[]
+  authoredHistories  HumanitarniUgovoriHistory[] @relation("HistoryAuthor")
+  updatedHistories   HumanitarniUgovoriHistory[] @relation("HistoryUpdater")
+}
+
+model vas_servisi {
+  id               Int       @id @default(autoincrement())
+  grupa            String    @newdb.VarChar(50)
+  naziv_servisa    String    @newdb.VarChar(100)
+  cena             Decimal?  @newdb.Decimal(10, 2)
+  date             DateTime? @newdb.Date
+  broj_transakcija Decimal?  @newdb.Decimal(15, 0)
+  ukupno           Decimal?  @newdb.Decimal(15, 2)
+  Provajder        String?   @newdb.VarChar(100)
+  userId           Int?
+  user             users?    @relation(fields: [userId], references: [id])
+
+  @@unique([grupa, naziv_servisa, Provajder, date, cena], map: "unique_vas_pos")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model bulkServisi {
+  id             Int     @id @default(autoincrement())
+  provider_name  String  @newdb.VarChar(255)
+  agreement_name String  @newdb.VarChar(255)
+  service_name   String  @newdb.VarChar(255)
+  step_name      String? @newdb.VarChar(255)
+  sender_name    String  @newdb.VarChar(255)
+  requests       Int?
+  message_parts  Int?
+
+  @@unique([provider_name, agreement_name, service_name, sender_name], map: "bs_prov_agr_svc_snd_uniq")
+}
+model Account {
+  id                 String  @id @default(cuid())
+  userId             Int     // Мора бити Int да одговара users.id
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @newdb.Text
+  access_token       String? @newdb.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @newdb.Text
+  session_state      String?
+  user               users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int      // Мора бити Int да одговара users.id
+  expires      DateTime
+  user         users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

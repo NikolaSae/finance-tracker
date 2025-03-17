@@ -1,0 +1,6 @@
+﻿id,name,email,role,created_by,created_at,updated_at
+1,"Petar Petrović","petar@example.com","admin",1,"2024-01-01 09:00:00+01","2024-01-01 09:00:00+01"
+2,"Ana Anić","ana@example.com","user",1,"2024-01-02 10:15:00+01","2024-01-02 10:15:00+01"
+3,"Marko Marković","marko@example.com","accountant",1,"2024-01-03 11:30:00+01","2024-01-05 14:20:00+01"
+4,"Jovana Jovanović","jovana@example.com","user",3,"2024-02-15 08:45:00+01","2024-02-15 08:45:00+01"
+5,"Ivana Ivanić","ivana@example.com","user",1,"2024-03-10 16:00:00+01","2024-03-12 09:10:00+01"

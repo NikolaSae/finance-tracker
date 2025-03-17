@@ -1,0 +1,2 @@
+{row[column] || "N/A"}
+"Provajder", "sum_broj_transakcija", "sum_fakturisan_iznos", "sum_naplaćen_iznos", "sum_kumulativ_naplaćenih_iznosa", "sum_nenaplaćen_iznos", "Mesec pružanja usluge
