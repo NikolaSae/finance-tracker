@@ -1,8 +1,11 @@
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcryptjs from 'bcryptjs';
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -13,66 +16,121 @@ export const authOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
-      authorize: async (credentials) => {
-        if (!credentials?.email || !credentials?.password) return null;
+      async authorize(credentials) {
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Недостају обавезна поља');
+          }
 
-        const user = await prisma.users.findUnique({
-          where: { email: credentials.email }
-        });
+          return await prisma.$transaction(async (tx) => {
+            const user = await tx.users.findUnique({
+              where: { email: credentials.email.toLowerCase() },
+              select: {
+                id: true,
+                password: true,
+                loginAttempts: true,
+                lockedUntil: true,
+                active: true,
+                role: true,
+                name: true
+              }
+            });
 
-        if (!user || !user.password) return null;
+            // Провера закључаног налога
+            if (user?.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+              throw new Error('Налог је закључан');
+            }
 
-        const isValidPassword = await bcryptjs.compare(
-          credentials.password, 
-          user.password
-        );
+            if (!user || !user.password || !user.active) {
+              throw new Error('Невалидни креденцијали');
+            }
 
-        if (!isValidPassword) return null;
+            const isValid = await bcryptjs.compare(
+              credentials.password,
+              user.password
+            );
 
-        return { 
-          id: user.id.toString(),
-          email: user.email,
-          role: user.role,
-          name: user.name,
-          image: user.image
-        };
+            if (!isValid) {
+              const updatedAttempts = user.loginAttempts + 1;
+              await tx.users.update({
+                where: { id: user.id },
+                data: {
+                  loginAttempts: updatedAttempts,
+                  lockedUntil: updatedAttempts >= 3 
+                    ? new Date(Date.now() + 900000) // 15 минута
+                    : null
+                }
+              });
+              throw new Error('Невалидна лозинка');
+            }
+
+            // Ресетуј бројач на успешну пријаву
+            await tx.users.update({
+              where: { id: user.id },
+              data: {
+                loginAttempts: 0,
+                lockedUntil: null,
+                lastLogin: new Date()
+              }
+            });
+
+            return {
+              id: user.id.toString(),
+              email: credentials.email,
+              name: user.name,
+              role: user.role
+            };
+          });
+
+        } catch (error) {
+          console.error('Грешка при пријави:', {
+            message: error.message,
+            stack: error.stack,
+            email: credentials?.email
+          });
+          return null;
+        }
       }
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update") {
+        return { ...token, ...session.user };
+      }
+      
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
-        token.image = user.image;
-        
-        await prisma.users.update({
-          where: { id: parseInt(user.id) },
-          data: { lastlogin: new Date() }
-        });
+        token.email = user.email;
+        token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 дана
       }
       return token;
     },
     async session({ session, token }) {
-      session.user = {
-        id: token.id,
-        email: token.email,
-        role: token.role,
-        name: token.name,
-        image: token.image
+      if (token) {
+        session.user = {
+          id: token.id,
+          role: token.role,
+          name: token.name,
+          email: token.email
+        };
+        session.expires = new Date(token.exp * 1000).toISOString();
       }
       return session;
     }
   },
-  secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 7, // 7 дана
+    updateAge: 60 * 60 // Освежи сесију сваких сат времена
   },
   pages: {
     signIn: '/auth/login',
+    error: '/auth/error'
   },
-  debug: true,
+  secret: process.env.NEXTAUTH_SECRET
 };
 
 const handler = NextAuth(authOptions);

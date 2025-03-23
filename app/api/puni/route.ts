@@ -9,7 +9,7 @@ export async function POST() {
   try {
     // Execute the import script and capture its output
     const { stdout, stderr } = await execPromise(
-      "python /xampp-8-telekom/htdocs/finance-tracker/scripts/import_script.py"
+      "python /workspaces/finance-tracker/scripts/import_script.py"
     );
 
     if (stderr) {
@@ -24,7 +24,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       message: "Import successful",
-      updatedFiles, // Send the list of updated data
+      updatedFiles, // Send the list of updated files
     });
   } catch (error) {
     console.error(`❌ Greška: ${error.message}`);

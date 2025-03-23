@@ -2,20 +2,14 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   experimental: {
-    // Za direktan PostgreSQL pristup
     serverComponentsExternalPackages: ["pg"],
-    // Omogućava Server Actions
-    serverActions: true,
-        incrementalCacheHandlerPath: process.env.NODE_ENV === 'production' 
-      ? './cache-handler.js' 
-      : undefined,
-    // Optimizacija importa
-    optimizePackageImports: [
-      "@prisma/client",
-      "next-auth"
-    ],
-    // Uključi Turbopack (ako je podržan u tvojoj verziji)
-    turbopack: true
+    serverActions: {
+      allowedOrigins: [
+        'localhost:3000',
+        '*.app.github.dev',
+        'expert-space-acorn-*-3000.app.github.dev'
+      ],
+    },
   },
   images: {
     domains: ['localhost'],
@@ -23,25 +17,31 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/uploads/:path*',
+        source: '/api/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          }
-        ]
-      }
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: process.env.NEXTAUTH_URL || '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+        ],
+      },
     ]
   },
-  // Kada koristiš Turbopack, nije potrebno dodavati webpack konfiguraciju,
-  // pa ukloni ili komentariši deo koji se odnosi na Webpack:
-  // webpack: (config) => {
-  //   config.externals.push({
-  //     'pg-hstore': 'commonjs pg-hstore',
-  //     pg: 'commonjs pg',
-  //   })
-  //   return config
-  // }
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+        dns: false,
+        net: false,
+        tls: false
+      };
+    }
+    config.externals.push({
+      'pg-hstore': 'commonjs pg-hstore',
+      pg: 'commonjs pg',
+    });
+    return config;
+  }
 }
 
 export default nextConfig

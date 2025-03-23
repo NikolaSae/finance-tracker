@@ -1,20 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "@ag-grid-community/styles/ag-grid.css";
-@import "@ag-grid-community/styles/ag-theme-alpine.css";
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --background: 0 0% 100%; /* Light mode background */
+    --foreground: 0 0% 10%;  /* Light mode text */
+    --ag-border-color: #e2e8f0; /* Light mode border color for AG Grid */
+    --ag-header-background-color: #f8fafc; /* Light mode header background for AG Grid */
+    --ag-odd-row-background-color: #f1f5f9; /* Light mode odd row background for AG Grid */
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: 0 0% 4%;
-      --foreground: 0 0% 93%;
-    }
+  .dark {
+    --background: 0 0% 4%; /* Dark mode background */
+    --foreground: 0 0% 93%; /* Dark mode text */
+    --ag-border-color: #374151; /* Dark mode border color for AG Grid */
+    --ag-header-background-color: #1f2937; /* Dark mode header background for AG Grid */
+    --ag-odd-row-background-color: #111827; /* Dark mode odd row background for AG Grid */
   }
 }
 
@@ -50,22 +52,20 @@ html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Dark mode */
-.dark {
-  --background: 0 0% 4%;
-  --foreground: 0 0% 93%;
+body {
+  background-color: #121212 !important; /* Za dark temu */
 }
 
-body {
-  background-color: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
+body.light {
+  background-color: #ffffff !important; /* Za light temu */
 }
 
 .MuiContainer-root {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }
-/* Add these styles to your global CSS file */
+
+/* Toastify styles */
 .toastify-info {
   background-color: #2196F3 !important; /* Blue background for info notifications */
   color: white !important; /* White text */
@@ -76,15 +76,7 @@ body {
   color: white !important; /* White text */
 }
 
-/* Optional: Style the container itself */
 .Toastify__toast-container {
   z-index: 9999;
 }
-.ag-theme-alpine {
-  --ag-border-color: #e2e8f0;
-  --ag-header-background-color: #f8fafc;
-  --ag-odd-row-background-color: #f1f5f9;
-}
-.ag-root-wrapper {
-  contain: none !important;
-}
+

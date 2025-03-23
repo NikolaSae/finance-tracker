@@ -11,13 +11,14 @@ sys.stdout.reconfigure(encoding='utf-8')
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
-# DB parameters for PostgreSQL connection
+# DB parameters for Neon connection
 DB_PARAMS = {
-    "dbname": "newdb",
-    "user": "postgres",
-    "password": "postgres",
-    "host": "localhost",  # Adjust as necessary
-    'port': '5432'        # Adjust as necessary
+    "dbname": "neondb",  # Naziv baze podataka
+    "user": "neondb_owner",  # Korisničko ime
+    "password": "npg_PDfXQm1ylSN8",  # Lozinka
+    "host": "ep-blue-term-a9wbahi4.gwc.azure.neon.tech",  # Neon host
+    "port": "5432",  # Neon port
+    "sslmode": "require"  # SSL zahteva se za Neon
 }
 
 def convert_to_float(val):
@@ -289,8 +290,8 @@ def import_to_postgresql(csv_path):
             logging.info("Database connection closed.")
 
 # Pokretanje obrade fajlova
-folder_path = "E:/xampp-8-telekom/htdocs/finance-tracker/scripts/data/vas/"
-output_file = "E:/xampp-8-telekom/htdocs/finance-tracker/scripts/data/output.csv"
+folder_path = "/workspaces/finance-tracker/scripts/"
+output_file = "/workspaces/finance-tracker/scripts/data/output.csv"
 process_all_files(folder_path, output_file)
 
 # Čišćenje CSV fajla (ako je potrebno)

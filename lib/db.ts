@@ -1,21 +1,19 @@
 import { Pool } from 'pg';
 
-// Konfiguracija iz environment varijabli
+// Користи цео connection string из environment-a
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || '5432'),
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  max: 20, // Maksimalno konekcija u pool-u
+  connectionString: process.env.DATABASE_URL, // Ово мора да буде Neon-ов URL
+  ssl: {
+    rejectUnauthorized: false // ИСКЉУЧИ ОВО У ПРОДАКЦИЈИ!
+  },
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-// Provera konekcije pri inicijalizaciji
+// Тест везе
 pool.query('SELECT NOW()')
-  .then(() => console.log('Database connected successfully'))
-  .catch(err => console.error('Database connection error:', err));
+  .then(() => console.log('✅ Database connected'))
+  .catch(err => console.error('❌ Database connection error:', err));
 
 export default pool;

@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Layout from "@/components/Layout";
 import NavbarMulti from "@/components/NavbarMulti";
-import NavbarPro from "@/components/NavbarPro"; // Import new NavbarPro component
+import NavbarPro from "@/components/NavbarPro";
 import {
   Box,
   Typography,
@@ -15,9 +15,50 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Button
 } from "@mui/material";
-import { useSession } from "next-auth/react";  // Import useSession to get session data
-import useFormattedMonth from "@/hooks/useFormattedMonth"; // Import the custom hook
+import { useSession } from "next-auth/react";
+import { utils, writeFile } from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// ==== UTILITY FUNCTIONS ====
+interface FormattedViewRow {
+  id?: string;
+  Mesec_pruzanja_usluge: string;
+  Provajder?: string;
+  provider_name?: string;
+  [key: string]: any;
+}
+
+const formatMonthData = (data: FormattedViewRow[]): FormattedViewRow[] => {
+  if (!Array.isArray(data)) return [];
+
+  return data.map(item => {
+    try {
+      const dateValue = item.Mesec_pruzanja_usluge;
+      const formattedDate = new Date(dateValue).toLocaleDateString('sr-Latn-RS', {
+        month: '2-digit',
+        year: 'numeric'
+      }).replace(/\./g, '-');
+
+      return {
+        ...item,
+        Mesec_pruzanja_usluge: formattedDate
+      };
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return {
+        ...item,
+        Mesec_pruzanja_usluge: 'N/A'
+      };
+    }
+  });
+};
+type ViewConfig = typeof viewsConfig[number];
+type ExportFormat = 'csv' | 'excel' | 'pdf';
 
 const viewsConfig = [
   { 
@@ -39,63 +80,50 @@ const viewsConfig = [
     isPlaceholder: true
   },
   { 
-    name: "placeholder3",
-    title: "Coming Soon 3",
-    columns: [],
+    name: "providermonthlysummary",
+    title: "bulk test",
+    columns: ["provider_name", "month", "total_services", "total_requests", "total_message_parts"],
     isPlaceholder: true
   }
 ] as const;
 
-
 export default function MultiViewPage() {
-  const { data: session, status } = useSession();  // Get session data
-  const [activeView, setActiveView] = useState(viewsConfig[0].name); // Set the first view as default
-  const [viewsData, setViewsData] = useState<{ [key: string]: any[] }>( 
-    viewsConfig.reduce((acc, view) => ({
-      ...acc,
-      [view.name]: []
-    }), {})
+  const { data: session, status } = useSession();
+  const [activeView, setActiveView] = useState<ViewConfig['name']>(viewsConfig[0].name);
+  const [viewsData, setViewsData] = useState<{ [key: string]: FormattedViewRow[] }>(
+    viewsConfig.reduce((acc, view) => ({ ...acc, [view.name]: [] }), {})
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeProvider, setActiveProvider] = useState("Svi"); // Define activeProvider state
+  const [activeProvider, setActiveProvider] = useState("Svi");
 
   useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     const fetchData = async () => {
-      if (!session) return; // Prevent fetch if not logged in
-
-      setLoading(true);
-      setError("");
-
-      if (["placeholder4", "placeholder2", "placeholder3"].includes(activeView)) {
+      if (!session || viewsData[activeView].length > 0) {
         setLoading(false);
         return;
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout
-
-      console.log("🔍 Fetching data from:", `/api/data/view/${activeView}`);
+      setLoading(true);
+      setError("");
 
       try {
-        const res = await fetch(`/api/data/view/${activeView}`, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        console.log("✅ API Response Status:", res.status);
+        const res = await fetch(`/api/data/view/${activeView}`, { 
+          signal: controller.signal 
+        });
 
         if (!res.ok) throw new Error("Greška u API pozivu");
+        const data: ViewRow[] = await res.json();
 
-        const data = await res.json();
-        console.log("📊 API Response Data:", data);
-
-        setViewsData((prev) => {
-          const updatedData = { ...prev, [activeView]: data };
-          console.log("🔄 Updated viewsData:", updatedData);
-          return updatedData;
-        });
+        setViewsData(prev => ({
+          ...prev,
+          [activeView]: data
+        }));
       } catch (err) {
-        console.error("❌ Fetch error:", err);
-        setError("Došlo je do greške pri učitavanju podataka");
+        setError(err instanceof Error ? err.message : "Došlo je do greške");
       } finally {
         clearTimeout(timeoutId);
         setLoading(false);
@@ -103,25 +131,100 @@ export default function MultiViewPage() {
     };
 
     fetchData();
-  }, [activeView, session]);
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [activeView, session, viewsData]);
 
-  // Use the custom hook to format the "Mesec pružanja usluge" data
-  const formattedData = useFormattedMonth(viewsData[activeView]);
-
-  // Create a list of all providers and add 'Svi' (All)
-  const allProviders = [
-    "Svi", // This is for showing all providers
-    ...new Set(formattedData.map((row) => row["Provajder"])) // Get unique providers from 'Provajder' column
-  ];
-
-  // Filter the data based on the selected provider
-  const filteredData = formattedData.filter((row) =>
-    activeProvider === "Svi" || row["Provajder"] === activeProvider
+  // Hook-ovi se pozivaju na najvišem nivou funkcionalne komponente
+  const formattedData = useMemo(
+    () => formatMonthData(viewsData[activeView]),
+    [viewsData, activeView]
   );
 
-  if (status === "loading") {
-    return <CircularProgress />; // Loading state for session
+  const providerKey = useMemo(
+    () => activeView === "providermonthlysummary" ? "provider_name" : "Provajder",
+    [activeView]
+  );
+
+  const allProviders = useMemo(() => [
+    "Svi",
+    ...new Set(
+      formattedData
+        .map(row => row[providerKey])
+        .filter(Boolean)
+        .map(p => String(p))
+    )
+  ], [formattedData, providerKey]);
+
+  const filteredData = useMemo(() => {
+    if (activeProvider === "Svi") return formattedData;
+    return formattedData.filter(row => 
+      String(row[providerKey]) === String(activeProvider)
+    );
+  }, [formattedData, activeProvider, providerKey]);
+
+  const getRowKey = (row: FormattedViewRow) => 
+    row.id || `${row[providerKey]}_${row.Mesec_pruzanja_usluge}`;
+
+
+  // Uklonite duplikat i koristite jednu funkciju:
+const handleExport = (format: ExportFormat) => {
+  if (filteredData.length === 0) {
+    toast.error("Nema podataka za eksport");
+    return;
   }
+
+  const currentView = viewsConfig.find(view => view.name === activeView);
+  if (!currentView) return;
+
+  try {
+    const filename = `${currentView.title}_${new Date()
+      .toLocaleDateString('sr-RS')
+      .replace(/\//g, '-')}`;
+
+    const exportData = filteredData.map(row => {
+      const newRow = { ...row };
+      delete newRow.id;
+      return newRow;
+    });
+
+    switch (format) {
+      case 'csv':
+      case 'excel': {
+        const worksheet = utils.json_to_sheet(exportData);
+        const workbook = utils.book_new();
+        utils.book_append_sheet(workbook, worksheet, "Sheet1");
+        writeFile(workbook, `${filename}.${format === 'csv' ? 'csv' : 'xlsx'}`);
+        break;
+      }
+      case 'pdf': {
+        const doc = new jsPDF();
+        const columns = currentView.columns;
+        const tableData = exportData.map(row => 
+          columns.map(col => row[col] || "N/A")
+        );
+        autoTable(doc, {
+          head: [columns],
+          body: tableData,
+        });
+        doc.save(`${filename}.pdf`);
+        break;
+      }
+      default:
+        toast.error("Nepoznat format za eksport.");
+    }
+    
+    toast.success(`Uspešno eksportovano u ${format.toUpperCase()}`);
+
+  } catch (error) {
+    console.error('Export Error:', error);
+    toast.error('Greška pri eksportu podataka');
+  }
+};
+
+ 
 
   return (
     <Layout>
@@ -135,7 +238,7 @@ export default function MultiViewPage() {
           />
         </Box>
       )}
-
+  
       {/* NavbarMulti - Handles view selection */}
       {session && (
         <Box sx={{ marginTop: 5 }}>
@@ -146,12 +249,12 @@ export default function MultiViewPage() {
           />
         </Box>
       )}
-
+  
       {/* Display user info from session */}
-      <Box sx={{ marginBottom: 5}}>
+      <Box sx={{ marginBottom: 5 }}>
         {session ? (
           <Typography variant="h6" color="primary">
-            Welcome, {session.user.name || session.user.email} {/* Display user name or email */}
+            Dobrodošli, {session.user.name || session.user.email} {/* Display user name or email */}
           </Typography>
         ) : (
           <Typography variant="h6" color="error">
@@ -159,15 +262,17 @@ export default function MultiViewPage() {
           </Typography>
         )}
       </Box>
-
+  
       <Typography variant="h4" gutterBottom sx={{
-    mb: 4,
-    backgroundColor: "#f0f0f0", // Change this to your preferred color
-    padding: "10px", // Optional: Adds some padding to make the background color visible around the text
-  }}>
+        mb: 4,
+        backgroundColor: "#f0f0f0", // Background color
+        padding: "10px", // Padding around the text
+      }}>
         Finansijski Pregled
       </Typography>
-
+  
+      
+  
       <Grid container spacing={3}>
         {viewsConfig
           .filter((view) => view.name === activeView)
@@ -176,8 +281,34 @@ export default function MultiViewPage() {
               <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
                 <Typography variant="h6" gutterBottom>
                   {view.title}
+                  {/* Export Buttons */}
+      <Box sx={{ marginBottom: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleExport('csv')}
+          sx={{ marginRight: 2 }}
+        >
+          Export to CSV
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => handleExport('excel')}
+          sx={{ marginRight: 2 }}
+        >
+          Export to Excel
+        </Button>
+        <Button
+          variant="contained"
+          color="default"
+          onClick={() => handleExport('pdf')}
+        >
+          Export to PDF
+        </Button>
+      </Box>
                 </Typography>
-
+  
                 {loading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                     <CircularProgress />
@@ -187,59 +318,68 @@ export default function MultiViewPage() {
                     {error}
                   </Typography>
                 ) : filteredData.length === 0 && !loading ? (
-  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%"}}>
-    <Typography variant="body1">U pripremi</Typography>
-  </Box>
-) : (
-  <TableContainer sx={{ border: "1px solid black", backgroundColor: '' }}>
-  <Table size="small">
-    <TableHead>
-      <TableRow sx={{ borderBottom: "2px solid black", backgroundColor: 'lightgreen' }}>
-        {view.columns.map((column, colIndex) => (
-          <TableCell
-            key={column}
-            sx={{
-              borderBottom: "2px solid black",
-              backgroundColor: colIndex === 2 ? 'lightblue' : 'transparent', // Color the second column header
-            }}
-          >
-            {column}
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {filteredData.length === 0 ? (
-        <TableRow>
-          <TableCell colSpan={view.columns.length} align="center">No data available</TableCell>
-        </TableRow>
-      ) : (
-        filteredData.map((row, rowIndex) => (
-          <TableRow key={rowIndex} sx={{ borderBottom: "1px solid black" }}>
-            {view.columns.map((column, colIndex) => (
-              <TableCell
-                key={column}
-                sx={{
-                  borderBottom: "1px solid black",
-                  backgroundColor: colIndex === 2 ? 'lightyellow' : 'transparent', // Color the second column in body
-                }}
-              >
-                {row[column] || "N/A"}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))
-      )}
-    </TableBody>
-  </Table>
-</TableContainer>
-
-
-)}
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%"}}>
+                    <Typography variant="body1">U pripremi</Typography>
+                  </Box>
+                ) : (
+                  <TableContainer sx={{ border: "1px solid black", backgroundColor: '' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ borderBottom: "2px solid black", backgroundColor: 'lightgreen' }}>
+                          {view.columns.map((column, colIndex) => (
+                            <TableCell
+                              key={column}
+                              sx={{
+                                borderBottom: "2px solid black",
+                                backgroundColor: colIndex === 2 ? 'lightblue' : 'transparent', // Color the second column header
+                              }}
+                            >
+                              {column}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {filteredData.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={view.columns.length} align="center">No data available</TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredData.map((row, rowIndex) => (
+                            <TableRow key={getRowKey(row)} sx={{ borderBottom: "1px solid black" }}>
+                              {view.columns.map((column, colIndex) => (
+                                <TableCell
+                                  key={column}
+                                  sx={{
+                                    borderBottom: "1px solid black",
+                                    backgroundColor: colIndex === 2 ? 'lightyellow' : 'transparent', // Color the second column in body
+                                  }}
+                                >
+                                  {row[column] || "N/A"}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
               </Paper>
             </Grid>
-          ))}
+            ))}
       </Grid>
+      <ToastContainer
+      position="bottom-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+    />
     </Layout>
   );
 }

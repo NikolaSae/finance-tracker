@@ -28,14 +28,14 @@ export default function Navbar() {
           <Button color="inherit" component={Link} href="/dashboard" fullWidth>
             Početna
           </Button>
-          <Button color="inherit" component={Link} href="/dashboard/vas-postpaid-summary" fullWidth>
-            Postpaid test
+          <Button color="inherit" component={Link} href="/dashboard/stats" fullWidth>
+            statistika
           </Button>
           <Button color="inherit" component={Link} href="/dashboard/reports" fullWidth>
             import/export
           </Button>
-          <Button color="inherit" component={Link} href="/dashboard/statistics" fullWidth>
-            Statistika
+          <Button color="inherit" component={Link} href="/dashboard/bulk-servisi" fullWidth>
+            Bulk
           </Button>
           <Button color="inherit" component={Link} href="/dashboard/humanitarni" fullWidth>
             humanitarni
@@ -96,16 +96,16 @@ export default function Navbar() {
                 Početna
               </Button>
               <Box sx={{ borderLeft: "1px solid black", height: '24px', margin: '0 8px' }} />
-              <Button color="inherit" component={Link} href="/dashboard/vas-postpaid-summary">
-                Postpaid test
+              <Button color="inherit" component={Link} href="/dashboard/stats">
+                Statistika
               </Button>
               <Box sx={{ borderLeft: "1px solid black", height: '24px', margin: '0 8px' }} />
               <Button color="inherit" component={Link} href="/dashboard/reports">
                 Import/export
               </Button>
               <Box sx={{ borderLeft: "1px solid black", height: '24px', margin: '0 8px' }} />
-              <Button color="inherit" component={Link} href="/dashboard/customview">
-                Trailer VAS
+              <Button color="inherit" component={Link} href="/dashboard/bulk-servisi">
+                Bulk
               </Button>
               <Box sx={{ borderLeft: "1px solid black", height: '24px', margin: '0 8px' }} />
               <Button color="inherit" component={Link} href="/dashboard/humanitarni">

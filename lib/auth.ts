@@ -1,54 +1,67 @@
+// lib/auth.ts
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "./prisma";
 import type { Adapter } from "next-auth/adapters";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcrypt";
 
-export const authOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter,
+export const authOptions: NextAuthOptions = {
   providers: [
-    // Dodajte vaše provajdere
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        // 1. Пронађи корисника
+        const user = await prisma.user.findUnique({
+          where: { email: credentials?.email }
+        });
+
+        if (!user) return null;
+
+        // 2. Провери лозинку
+        const isValid = await bcrypt.compare(
+          credentials!.password,
+          user.password || "" // Fallback за TypeScript
+        );
+
+        // 3. Врати објекат који ће бити сачуван у токену
+        return isValid ? {
+          id: user.id,
+          email: user.email,
+          role: user.role // Додајте ово ако користите роле
+        } : null;
+      }
+    })
   ],
   callbacks: {
-    async session({ session, token }) { // Uklonjen 'user' parametar
+    async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub!;
         session.user.role = token.role as string;
       }
       return session;
     },
-    async jwt({ token, user, trigger, session }) {
-      // Dodajemo role pri prvom loginu
+    async jwt({ token, user }) {
       if (user) {
-        token.role = user.role || "user"; // Fallback na default role
+        token.role = user.role || "user";
         token.sub = user.id;
       }
-      
-      // Ažuriranje role nakon promene kroz API
-      if (trigger === "update" && session?.role) {
-        token.role = session.role;
-      }
-      
       return token;
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 30 дана
   },
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === "production" 
-        ? "__Secure-auth-token" 
-        : "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  }
+  pages: {
+    signIn: "/login", // Пут до вашег login page-а
+  },
+  debug: process.env.NODE_ENV === "development" // Омогући дебаг
 };
 
 export default NextAuth(authOptions);

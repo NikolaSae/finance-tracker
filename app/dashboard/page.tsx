@@ -1,8 +1,11 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Layout from "@/components/Layout";
-import Link from 'next/link';
+import { Box, Typography, CircularProgress, Link as MuiLink } from "@mui/material";
+import Layout from "../../components/layout"; // Ispravljena putanja
+import Link from "next/link";
+import { useTheme } from "next-themes";
 
 interface Ugovor {
   id: number;
@@ -22,6 +25,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,12 +63,9 @@ export default function DashboardPage() {
   if (status === "loading") {
     return (
       <Layout>
-        <div className="flex justify-center items-center min-h-screen">
-          <div 
-            className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"
-            aria-label="Učitavanje sesije"
-          />
-        </div>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+          <CircularProgress />
+        </Box>
       </Layout>
     );
   }
@@ -72,57 +73,49 @@ export default function DashboardPage() {
   if (!session?.user) {
     return (
       <Layout>
-        <p className="text-center py-8">Prijavite se da biste videli statistiku</p>
+        <Typography variant="body1" align="center" py={4}>
+          Prijavite se da biste videli statistiku
+        </Typography>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-8 text-center">
+      <Box minHeight="100vh" p={4} bgcolor="background.default">
+        <Box maxWidth="4xl" mx="auto">
+          <Typography variant="h4" fontWeight="bold" mb={4} textAlign="center">
             {session.user.name || session.user.email}
-          </h1>
+          </Typography>
 
           {error && (
-            <div className="mb-8 p-4 bg-red-100 text-red-700 rounded-lg">
-              {error}
-            </div>
+            <Box mb={4} p={2} bgcolor="error.light" color="error.main" borderRadius={2}>
+              <Typography>{error}</Typography>
+            </Box>
           )}
 
           {loading ? (
-            <div className="text-center py-8">
-              <div 
-                className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto"
-                aria-label="Učitavanje podataka"
-              />
-              <p className="mt-4 text-gray-600">Učitavanje podataka...</p>
-            </div>
+            <Box textAlign="center" py={4}>
+              <CircularProgress />
+              <Typography mt={2} color="text.secondary">
+                Učitavanje podataka...
+              </Typography>
+            </Box>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <StatCard 
-                  title="Humanitarni ugovori"
-                  value={stats?.humanitarni || 0}
-                />
-                <StatCard
-                  title="VAS Postpaid"
-                  value={stats?.postpaid || 0}
-                />
-                <StatCard
-                  title="VAS Servisi"
-                  value={stats?.servisi || 0}
-                />
-              </div>
+              <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "repeat(3, 1fr)" }} gap={4} mb={4}>
+                <StatCard title="Humanitarni ugovori" value={stats?.humanitarni || 0} />
+                <StatCard title="VAS Postpaid" value={stats?.postpaid || 0} />
+                <StatCard title="VAS Servisi" value={stats?.servisi || 0} />
+              </Box>
 
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h2 className="text-xl font-semibold mb-4">
+              <Box bgcolor="background.paper" p={4} borderRadius={2} boxShadow={3}>
+                <Typography variant="h6" fontWeight="semibold" mb={2}>
                   Aktivni humanitarni ugovori
-                </h2>
+                </Typography>
                 
                 {stats?.ugovori?.length ? (
-                  <div className="divide-y">
+                  <Box>
                     {stats.ugovori.map((ugovor) => (
                       <ContractListItem
                         key={ugovor.id}
@@ -131,27 +124,29 @@ export default function DashboardPage() {
                         contractNumber={ugovor.kratkiBroj}
                       />
                     ))}
-                  </div>
+                  </Box>
                 ) : (
                   <EmptyState message="Nema aktivnih humanitarnih ugovora" />
                 )}
-              </div>
+              </Box>
             </>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
     </Layout>
   );
 }
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg text-center hover:shadow-xl transition-shadow">
-      <h3 className="text-lg font-semibold mb-2 text-gray-700">{title}</h3>
-      <div className="text-3xl font-bold text-blue-600">
+    <Box bgcolor="background.paper" p={3} borderRadius={2} boxShadow={3} textAlign="center">
+      <Typography variant="h6" color="text.secondary" mb={1}>
+        {title}
+      </Typography>
+      <Typography variant="h4" color="primary.main" fontWeight="bold">
         {value.toLocaleString()}
-      </div>
-    </div>
+      </Typography>
+    </Box>
   );
 }
 
@@ -165,24 +160,23 @@ function ContractListItem({
   contractNumber?: string;
 }) {
   return (
-    <Link
-      href={`/ugovori/${id}`}
-      className="block p-4 hover:bg-gray-50 transition-colors"
-      aria-label={`Pregledaj ugovor sa ${organization}`}
-    >
-      <div className="font-medium text-gray-900">{organization}</div>
-      <div className="text-sm text-gray-600">
-        Broj ugovora: {contractNumber || 'N/A'}
-      </div>
+    <Link href={`/ugovori/${id}`} passHref>
+      <MuiLink component="div" p={2} borderRadius={1} sx={{ "&:hover": { bgcolor: "action.hover" } }}>
+        <Typography fontWeight="medium">{organization}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Broj ugovora: {contractNumber || "N/A"}
+        </Typography>
+      </MuiLink>
     </Link>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="text-center py-6">
-      <div className="text-gray-400 mb-2">⎯</div>
-      <p className="text-gray-500">{message}</p>
-    </div>
+    <Box textAlign="center" py={3}>
+      <Typography variant="body2" color="text.secondary">
+        {message}
+      </Typography>
+    </Box>
   );
 }
