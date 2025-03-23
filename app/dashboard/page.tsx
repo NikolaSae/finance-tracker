@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Box, Typography, CircularProgress, Link as MuiLink } from "@mui/material";
-import Layout from "../../components/layout"; // Ispravljena putanja
+import Layout from "../layout"; // Ispravljena putanja
 import Link from "next/link";
 import { useTheme } from "next-themes";
 

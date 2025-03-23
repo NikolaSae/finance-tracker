@@ -1,4 +1,3 @@
-// app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcryptjs from 'bcryptjs';
@@ -22,66 +21,63 @@ export const authOptions = {
             throw new Error('Недостају обавезна поља');
           }
 
-          return await prisma.$transaction(async (tx) => {
-            const user = await tx.users.findUnique({
-              where: { email: credentials.email.toLowerCase() },
-              select: {
-                id: true,
-                password: true,
-                loginAttempts: true,
-                lockedUntil: true,
-                active: true,
-                role: true,
-                name: true
-              }
-            });
-
-            // Провера закључаног налога
-            if (user?.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-              throw new Error('Налог је закључан');
+          const user = await prisma.users.findUnique({
+            where: { email: credentials.email.toLowerCase() },
+            select: {
+              id: true,
+              password: true,
+              loginAttempts: true,
+              lockedUntil: true,
+              active: true,
+              role: true,
+              name: true
             }
-
-            if (!user || !user.password || !user.active) {
-              throw new Error('Невалидни креденцијали');
-            }
-
-            const isValid = await bcryptjs.compare(
-              credentials.password,
-              user.password
-            );
-
-            if (!isValid) {
-              const updatedAttempts = user.loginAttempts + 1;
-              await tx.users.update({
-                where: { id: user.id },
-                data: {
-                  loginAttempts: updatedAttempts,
-                  lockedUntil: updatedAttempts >= 3 
-                    ? new Date(Date.now() + 900000) // 15 минута
-                    : null
-                }
-              });
-              throw new Error('Невалидна лозинка');
-            }
-
-            // Ресетуј бројач на успешну пријаву
-            await tx.users.update({
-              where: { id: user.id },
-              data: {
-                loginAttempts: 0,
-                lockedUntil: null,
-                lastLogin: new Date()
-              }
-            });
-
-            return {
-              id: user.id.toString(),
-              email: credentials.email,
-              name: user.name,
-              role: user.role
-            };
           });
 
+          // Провера закључаног налога
+          if (user?.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+            throw new Error('Налог је закључан');
+          }
+
+          if (!user || !user.password || !user.active) {
+            throw new Error('Невалидни креденцијали');
+          }
+
+          const isValid = await bcryptjs.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isValid) {
+            const updatedAttempts = user.loginAttempts + 1;
+            await prisma.users.update({
+              where: { id: user.id },
+              data: {
+                loginAttempts: updatedAttempts,
+                lockedUntil: updatedAttempts >= 3 
+                  ? new Date(Date.now() + 900000) // 15 минута
+                  : null
+              }
+            });
+            throw new Error('Невалидна лозинка');
+          }
+
+          // Ресетуј бројач на успешну пријаву
+          await prisma.users.update({
+            where: { id: user.id },
+            data: {
+              loginAttempts: 0,
+              lockedUntil: null,
+              lastLogin: new Date()
+            }
+          });
+
+          return {
+            id: user.id.toString(),
+            email: credentials.email,
+            name: user.name,
+            role: user.role
+          };
         } catch (error) {
           console.error('Грешка при пријави:', {
             message: error.message,

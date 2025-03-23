@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { GlobalStyles, Box, CircularProgress } from "@mui/material";
 import { CssBaseline } from "@mui/material";
-import Providers from "@/app/providers"; // Uvezite Providers
+import Providers from "@/app/providers";
 import FileUpload from "@/components/FileUpload";
 import ToastProvider from "@/components/ToastProvider";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import EmotionCacheProvider from "@/components/EmotionCacheProvider";
 import SessionInfo from "@/components/SessionInfo";
 import { useTheme } from "next-themes";
+import Navbar from "@/components/Navbar";
+import { SessionProvider } from "next-auth/react"; // Uvezite SessionProvider
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -70,41 +72,44 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="alternate icon" id="browser-tab-loader" href="/favicon-loading.ico" />
       </head>
       <body data-navigating={isNavigating || undefined}>
-        <Providers> {/* Omotajte aplikaciju sa Providers */}
-          <EmotionCacheProvider>
-            <CssBaseline />
-            <SessionInfo />
+        <SessionProvider> {/* Omotajte aplikaciju sa SessionProvider */}
+          <Navbar />
+          <Providers>
+            <EmotionCacheProvider>
+              <CssBaseline />
+              <SessionInfo />
 
-            {isNavigating && (
+              {isNavigating && (
+                <Box
+                  sx={{
+                    position: "fixed",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 9999,
+                  }}
+                >
+                  <CircularProgress size={60} thickness={4} color="primary" />
+                </Box>
+              )}
+
               <Box
+                component="main"
                 sx={{
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  zIndex: 9999,
+                  minHeight: "100vh",
+                  padding: "32px",
+                  backgroundColor: resolvedTheme === "dark" ? "#121212 !important" : "#ffffff !important",
                 }}
               >
-                <CircularProgress size={60} thickness={4} color="primary" />
+                {children}
+                <FileUpload />
+                <ThemeSwitcher />
               </Box>
-            )}
 
-            <Box
-              component="main"
-              sx={{
-                minHeight: "100vh",
-                padding: "32px",
-                backgroundColor: resolvedTheme === "dark" ? "#121212 !important" : "#ffffff !important",
-              }}
-            >
-              {children}
-              <FileUpload />
-              <ThemeSwitcher />
-            </Box>
-
-            <ToastProvider />
-          </EmotionCacheProvider>
-        </Providers>
+              <ToastProvider />
+            </EmotionCacheProvider>
+          </Providers>
+        </SessionProvider>
       </body>
     </html>
   );

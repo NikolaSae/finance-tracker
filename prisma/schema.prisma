@@ -26,6 +26,8 @@ model vas_postpaid {
   userId                                               Int?
   Iznos_za_prenos_sredstava_                           Decimal @map("Iznos_za_prenos_sredstava_") @neondb.Decimal(15, 2)
   user                                                 users?  @relation(fields: [userId], references: [id])
+  providerId                                           Int?
+  Provider                                             Provider? @relation(fields: [providerId], references: [id])
 
   @@unique([Proizvod, Mesec_pruzanja_usluge, Provajder], map: "unique_product_date")
 }
@@ -138,7 +140,9 @@ model vas_servisi {
   Provajder        String?   @neondb.VarChar(100)
   userId           Int?
   user             users?    @relation(fields: [userId], references: [id])
-
+  providerId       Int?
+  Provider         Provider? @relation(fields: [providerId], references: [id])
+  
   @@unique([grupa, naziv_servisa, Provajder, date, cena], map: "unique_vas_pos")
 }
 
