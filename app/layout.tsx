@@ -51,7 +51,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <GlobalStyles
           styles={{
             body: {
-              backgroundColor: resolvedTheme === "dark" ? "#121212 !important" : "#ffffff !important", // Dodajte !important
+              backgroundColor: resolvedTheme === "dark" ? "#121212 !important" : "#ffffff !important",
             },
             "@keyframes spin": {
               "0%": { transform: "rotate(0deg)" },
@@ -94,7 +94,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               sx={{
                 minHeight: "100vh",
                 padding: "32px",
-                backgroundColor: resolvedTheme === "dark" ? "#121212 !important" : "#ffffff !important", // Dodajte !important
+                backgroundColor: resolvedTheme === "dark" ? "#121212 !important" : "#ffffff !important",
               }}
             >
               {children}
