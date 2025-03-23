@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     // Putanja fajla
-    const tempFilePath = path.join(uploadDir, file.name);
+
     const buffer = Buffer.from(await file.arrayBuffer());
     
     // Upis fajla

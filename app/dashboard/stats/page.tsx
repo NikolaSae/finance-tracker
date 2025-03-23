@@ -44,24 +44,26 @@ interface ServiceData {
 
 const StatsPage = () => {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState("vas_postpaid");
+  const [activeTab, setActiveTab] = useState<"vas_postpaid" | "bulkServisi" | "vas_servisi">("vas_postpaid");
   const [selectedPeriod, setSelectedPeriod] = useState("all");
   const [topProviders, setTopProviders] = useState<ProviderData[]>([]);
   const [topServices, setTopServices] = useState<ServiceData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Generate last 12 months for the dropdown
+  // Generisanje poslednjih 12 meseci
   const months = Array.from({ length: 12 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
     return {
       value: `${date.getMonth() + 1}-${date.getFullYear()}`,
-      label: date.toLocaleString("default", { month: "long", year: "numeric" }),
+      label: date.toLocaleString("sr-RS", { month: "long", year: "numeric" }),
     };
   }).reverse();
 
   const fetchStats = async (model: string) => {
     setLoading(true);
+    setError("");
     try {
       const params = new URLSearchParams();
       if (selectedPeriod !== "all") {
@@ -70,21 +72,23 @@ const StatsPage = () => {
         params.append("year", year);
       }
 
-      // Fetch top providers
-      const providersRes = await fetch(
-        `/api/stats/top-providers?model=${model}&${params.toString()}`
-      );
-      const providersData: ProviderData[] = await providersRes.json();
-      setTopProviders(providersData);
+      const [providersRes, servicesRes] = await Promise.all([
+        fetch(`/api/stats/top-providers?model=${model}&${params.toString()}`),
+        fetch(`/api/stats/top-services?model=${model}&${params.toString()}`)
+      ]);
 
-      // Fetch top services
-      const servicesRes = await fetch(
-        `/api/stats/top-services?model=${model}&${params.toString()}`
-      );
+      if (!providersRes.ok || !servicesRes.ok) {
+        throw new Error('Greška pri učitavanju podataka');
+      }
+
+      const providersData: ProviderData[] = await providersRes.json();
       const servicesData: ServiceData[] = await servicesRes.json();
+
+      setTopProviders(providersData);
       setTopServices(servicesData);
-    } catch (error) {
-      console.error("Error fetching stats:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nepoznata greška');
+      console.error("Error fetching stats:", err);
     } finally {
       setLoading(false);
     }
@@ -97,42 +101,41 @@ const StatsPage = () => {
   }, [activeTab, session, selectedPeriod]);
 
   if (status === "loading") {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
     <>
       <Navbar />
       <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom component="div">
           Statistički pregled
         </Typography>
 
-        {/* Time Filter Section */}
+        {/* Filteri */}
         <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
           <Select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
             sx={{ minWidth: 200 }}
           >
-            <MenuItem value="all">Sve vrijeme</MenuItem>
+            <MenuItem value="all">Sve vreme</MenuItem>
             {months.map((month) => (
               <MenuItem key={month.value} value={month.value}>
                 {month.label}
               </MenuItem>
             ))}
           </Select>
-          <Button
-            variant={selectedPeriod === "all" ? "contained" : "outlined"}
-            onClick={() => setSelectedPeriod("all")}
-          >
-            Cijeli period
-          </Button>
         </Box>
 
+        {/* Tabovi */}
         <Tabs
           value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
+          onChange={(_, newValue) => setActiveTab(newValue)}
           sx={{ mb: 3 }}
         >
           <Tab label="VAS Postpaid" value="vas_postpaid" />
@@ -140,15 +143,23 @@ const StatsPage = () => {
           <Tab label="VAS Servisi" value="vas_servisi" />
         </Tabs>
 
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+
         {loading ? (
-          <CircularProgress />
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
         ) : (
           <Grid container spacing={3}>
-            {/* Top Providers Section */}
+            {/* Top Provajderi */}
             <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2, height: "100%" }}>
+              <Paper sx={{ p: 2, height: '100%' }}>
                 <Typography variant="h6" gutterBottom>
-                  Top 5 provajdera - {activeTab}
+                  Top provajderi - {activeTab}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={8}>
@@ -160,21 +171,25 @@ const StatsPage = () => {
                           nameKey="provider"
                           cx="50%"
                           cy="50%"
-                          outerRadius={100}
-                          fill="#8884d8"
-                          label
+                          outerRadius={80}
+                          label={({ percent }) => 
+                            percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
+                          }
                         >
-                          {topProviders.map((entry, index) => (
+                          {topProviders.map((_, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={COLORS[index % COLORS.length]}
                             />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value: number) => [
-                            `${value.toLocaleString('sr-RS')} RSD`,
-                            "Fakturisani iznos"
+                            new Intl.NumberFormat('sr-RS', {
+                              style: 'currency',
+                              currency: 'RSD'
+                            }).format(value),
+                            "Iznos"
                           ]}
                         />
                         <Legend />
@@ -182,40 +197,40 @@ const StatsPage = () => {
                     </ResponsiveContainer>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <List sx={{ maxHeight: 300, overflow: "auto" }}>
+                    <List sx={{ maxHeight: 300, overflow: 'auto' }}>
                       {topProviders
-                      .sort((a, b) => b.amount - a.amount)
-                      .map((provider, index) => (
-                        <div key={provider.provider}>
-                          <ListItem>
-                            <ListItemText
-                              primary={`${index + 1}. ${provider.provider}`}
-                              secondary={
-                                <>
-                                  Fakturisano: {(provider.amount || 0).toLocaleString('sr-RS', {
-                                  style: 'currency',
-                                  currency: 'RSD'
-                                })}
-                                <br />
-                                Transakcije: {provider.count.toLocaleString()}
-                              </>
-                              }
-                            />
-                          </ListItem>
-                          {index < topProviders.length - 1 && <Divider />}
-                        </div>
-                      ))}
+                        .sort((a, b) => b.amount - a.amount)
+                        .map((provider, index) => (
+                          <div key={provider.provider}>
+                            <ListItem>
+                              <ListItemText
+                                primary={`${index + 1}. ${provider.provider}`}
+                                secondary={
+                                  <>
+                                    Iznos: {new Intl.NumberFormat('sr-RS', {
+                                      style: 'currency',
+                                      currency: 'RSD'
+                                    }).format(provider.amount)}
+                                    <br />
+                                    Transakcije: {provider.count.toLocaleString('sr-RS')}
+                                  </>
+                                }
+                              />
+                            </ListItem>
+                            {index < topProviders.length - 1 && <Divider />}
+                          </div>
+                        ))}
                     </List>
                   </Grid>
                 </Grid>
               </Paper>
             </Grid>
 
-            {/* Top Services Section */}
+            {/* Top Servisi */}
             <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2, height: "100%" }}>
+              <Paper sx={{ p: 2, height: '100%' }}>
                 <Typography variant="h6" gutterBottom>
-                  Najprodavaniji servisi - {activeTab}
+                  Top servisi - {activeTab}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={8}>
@@ -227,21 +242,25 @@ const StatsPage = () => {
                           nameKey="name"
                           cx="50%"
                           cy="50%"
-                          outerRadius={100}
-                          fill="#82ca9d"
-                          label
+                          outerRadius={80}
+                          label={({ percent }) => 
+                            percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
+                          }
                         >
-                          {topServices.map((entry, index) => (
+                          {topServices.map((_, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={COLORS[index % COLORS.length]}
                             />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value: number) => [
-                            `${value.toLocaleString('sr-RS')} RSD`,
-                            "Fakturisani iznos"
+                            new Intl.NumberFormat('sr-RS', {
+                              style: 'currency',
+                              currency: 'RSD'
+                            }).format(value),
+                            "Iznos"
                           ]}
                         />
                         <Legend />
@@ -249,29 +268,29 @@ const StatsPage = () => {
                     </ResponsiveContainer>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <List sx={{ maxHeight: 300, overflow: "auto" }}>
+                    <List sx={{ maxHeight: 300, overflow: 'auto' }}>
                       {topServices
-                      .sort((a, b) => b.amount - a.amount)
-                      .map((service, index) => (
-                        <div key={service.name}>
-                          <ListItem>
-                            <ListItemText
-                              primary={`${index + 1}. ${service.name}`}
-                              secondary={
-                                <>
-                                  Fakturisano: {service.amount.toLocaleString('sr-RS', {
-                                    style: 'currency',
-                                    currency: 'RSD'
-                                  })}
-                                  <br />
-                                  Količina: {service.count.toLocaleString()}
-                                </>
-                              }
-                            />
-                          </ListItem>
-                          {index < topServices.length - 1 && <Divider />}
-                        </div>
-                      ))}
+                        .sort((a, b) => b.amount - a.amount)
+                        .map((service, index) => (
+                          <div key={service.name}>
+                            <ListItem>
+                              <ListItemText
+                                primary={`${index + 1}. ${service.name}`}
+                                secondary={
+                                  <>
+                                    Iznos: {new Intl.NumberFormat('sr-RS', {
+                                      style: 'currency',
+                                      currency: 'RSD'
+                                    }).format(service.amount)}
+                                    <br />
+                                    Količina: {service.count.toLocaleString('sr-RS')}
+                                  </>
+                                }
+                              />
+                            </ListItem>
+                            {index < topServices.length - 1 && <Divider />}
+                          </div>
+                        ))}
                     </List>
                   </Grid>
                 </Grid>

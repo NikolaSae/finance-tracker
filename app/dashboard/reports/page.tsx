@@ -14,7 +14,7 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
-import Layout from "@/components/Layout";
+import Layout from "../../layout";
 import ExportButton from "@/components/ExportButton";
 import GlobalLoading from "@/components/GlobalLoading";
 import PuniButton from "@/components/PuniButton";
