@@ -4,6 +4,11 @@ import pool from '@/lib/db';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import * as csv from 'csv-parser';
 import * as fs from 'fs';
+interface CsvRow {
+  date: string;
+  amount: string;
+  category: string;
+}
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -13,7 +18,7 @@ export async function POST(req: Request) {
 
   const data = await req.formData();
   const file = data.get('file') as File;
-  const results: any[] = [];
+  const results: CsvRow[] = [];
 
   fs.createReadStream(file.path)
     .pipe(csv())

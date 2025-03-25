@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+interface ResultItem {
+  Provajder?: string;
+  naziv_servisa?: string;
+  service_name?: string;
+  _sum: {
+    Broj_transakcija?: number;
+    broj_transakcija?: number;
+    message_parts?: number;
+  };
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -104,12 +114,12 @@ export async function GET(req: Request) {
         );
     }
 
-    const formatted = result.map((item: any) => ({
-      provider: item.Provajder || item.naziv_servisa || item.service_name,
-      count: item._sum.Broj_transakcija || 
-           item._sum.broj_transakcija || 
-           item._sum.message_parts || 0
-    }));
+    const formatted = result.map((item: ResultItem) => ({
+    provider: item.Provajder || item.naziv_servisa || item.service_name || 'Unknown',
+    count: item._sum.Broj_transakcija || 
+         item._sum.broj_transakcija || 
+         item._sum.message_parts || 0
+  }));
 
     return NextResponse.json(formatted);
   } catch (error) {

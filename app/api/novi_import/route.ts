@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST() {
   return new Promise((resolve) => {
     exec(
       'python /workspaces/finance-tracker/scripts/skripta.py',

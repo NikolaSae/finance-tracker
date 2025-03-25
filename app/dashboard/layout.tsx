@@ -1,79 +1,118 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Box, CircularProgress } from "@mui/material";
-import { useSession } from "next-auth/react";
-import Navbar from "@/components/Navbar";
-import FileUpload from "@/components/FileUpload";
-import ThemeSwitcher from "@/components/providers/ThemeSwitcher";
-import SessionInfo from "@/components/SessionInfo";
-import { redirect } from "next/navigation";
+import Countdown from "react-countdown";
+import { Typography, Tooltip, Box, CircularProgress } from "@mui/material";
+import Navbar from "../../components/Navbar";  // Pretpostavljamo da imaš Navbar komponentu
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isNavigating, setIsNavigating] = useState(false);
-  const { data: session, status } = useSession();
+// Komponenta za session info
+const SessionInfo = ({ session }) => {
+  const [sessionExpiration, setSessionExpiration] = useState<Date | null>(null);
 
-  // Favicon i loading logika
   useEffect(() => {
-    const updateFavicon = (isLoading: boolean) => {
-      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
-      link.href = isLoading ? "/favicon-loading.ico" : "/favicon.ico";
-    };
+    if (session?.countdownFormatted) {
+      const regex = /(\d+) (\d{2}):(\d{2}):(\d{2})/;
+      const match = session.countdownFormatted.match(regex);
 
-    const handleNavigation = () => {
-      setIsNavigating(true);
-      updateFavicon(true);
-      setTimeout(() => {
-        setIsNavigating(false);
-        updateFavicon(false);
-      }, 1000);
-    };
+      if (match) {
+        const days = parseInt(match[1], 10);
+        const hours = parseInt(match[2], 10);
+        const minutes = parseInt(match[3], 10);
+        const seconds = parseInt(match[4], 10);
 
-    handleNavigation();
-  }, [pathname, searchParams]);
+        const expiration = new Date();
+        expiration.setSeconds(expiration.getSeconds() + seconds);
+        expiration.setMinutes(expiration.getMinutes() + minutes);
+        expiration.setHours(expiration.getHours() + hours);
+        expiration.setDate(expiration.getDate() + days);
 
-  if (status === "loading") {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress size={60} thickness={4} />
-      </Box>
-    );
-  }
+        setSessionExpiration(expiration);
+      }
+    }
+  }, [session?.countdownFormatted]);
 
-  if (!session) {
-    redirect('/auth/login');
-  }
+  if (!session || session.status !== "authenticated") return null;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <Navbar />
-      
-      <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
-        <SessionInfo />
-        
-        {isNavigating && (
-          <Box sx={{ 
-            position: "fixed", 
-            top: "50%", 
-            left: "50%", 
-            transform: "translate(-50%, -50%)", 
-            zIndex: 9999 
-          }}>
-            <CircularProgress size={60} thickness={4} color="primary" />
-          </Box>
-        )}
-
-        {children}
-        <FileUpload />
-        <ThemeSwitcher />
-      </Box>
+    <Box
+      sx={{
+        position: "fixed",
+        top: 8,
+        right: 16,
+        zIndex: 99999,
+        backgroundColor: "#4caf50", 
+        color: "white",
+        padding: "4px 12px",
+        borderRadius: "4px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
+      }}
+    >
+      <Tooltip title="Session expiration countdown">
+        <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <span style={{ fontSize: "1.2em" }}>🔐</span>
+          {sessionExpiration ? (
+            <Countdown
+              date={sessionExpiration}
+              daysInHours={true}
+              renderer={({ days, hours, minutes, seconds }) => (
+                <span>{days}d {hours}h {minutes}m {seconds}s</span>
+              )}
+            />
+          ) : (
+            "Loading..."
+          )}
+        </Typography>
+      </Tooltip>
     </Box>
+  );
+};
+
+// Tvoje dodatne komponente
+import FileUpload from "../../components/FileUpload";
+import ThemeSwitcher from "../../components/providers/ThemeSwitcher";
+
+// Dashboard Layout with additional components
+export default function DashboardLayout({ children, session, status }) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulacija učitavanja
+    if (session) {
+      setLoading(false);
+    }
+  }, [session]);
+
+  return (
+    <div>
+      {/* Navbar */}
+      <Navbar />
+
+      {/* Dodajemo SessionInfo */}
+      <SessionInfo session={session} />
+
+      {/* Dodajemo Circular Progress ako se učitava */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', paddingTop: '50px' }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        // Dodajemo FileUpload i ThemeSwitcher kada je učitavanje završeno
+        <Box sx={{ padding: "16px", marginTop: "80px" }}>
+          <FileUpload />
+          <ThemeSwitcher />
+        </Box>
+      )}
+
+      {/* Ostatak sadržaja dashboard-a */}
+      <div>
+        <h1>Welcome to the Dashboard, {session?.user?.name}</h1>
+        <p>Some other dashboard content...</p>
+        
+        {/* Ovo renderuje sve komponente koje su prosleđene kao children */}
+        {children}
+      </div>
+    </div>
   );
 }

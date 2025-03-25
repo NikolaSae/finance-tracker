@@ -1,36 +1,40 @@
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-// GET - Dohvati sve ugovore
+// GET - Fetch all contracts
 export async function GET() {
   try {
     const contracts = await prisma.HumanitarniUgovori.findMany({
       include: {
         user: {
-          select: { name: true }, // Učitaj ime korisnika
+          select: { name: true },
         },
       },
     });
 
-    return new Response(JSON.stringify(contracts), { status: 200 });
+    // Log the fetched contracts
+    console.log("Fetched contracts:", contracts);
+
+    return NextResponse.json(contracts, { status: 200 });
   } catch (error) {
     console.error("Error fetching contracts:", error);
-    return new Response(
-      JSON.stringify({ message: "Error loading contract data", error: String(error) }),
+    return NextResponse.json(
+      { message: "Error loading contract data", error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
 
-// POST - Kreiraj novi ugovor
+// POST - Create a new contract
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session) {
       console.error("Unauthorized");
-      return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -38,7 +42,7 @@ export async function POST(req: Request) {
 
     if (!body || typeof body !== "object" || Object.keys(body).length === 0) {
       console.error("Invalid request body:", body);
-      return new Response(JSON.stringify({ message: "Invalid request body" }), { status: 400 });
+      return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
     }
 
     const newContract = await prisma.HumanitarniUgovori.create({
@@ -54,18 +58,21 @@ export async function POST(req: Request) {
         racun: body.racun || null,
         banka: body.banka || null,
         mb: body.mb || null,
-        userId: session.user.id, // Koristimo ID iz sesije
+        userId: session.user.id,
       },
     });
 
-    return new Response(
-      JSON.stringify({ message: "Podaci uspešno zapisani.", contract: newContract }),
+    // Log the newly created contract
+    console.log("New contract created:", newContract);
+
+    return NextResponse.json(
+      { message: "Data successfully saved.", contract: newContract },
       { status: 201 }
     );
   } catch (error) {
     console.error("Error creating contract:", error);
-    return new Response(
-      JSON.stringify({ message: "Error creating contract", error: String(error) }),
+    return NextResponse.json(
+      { message: "Error creating contract", error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

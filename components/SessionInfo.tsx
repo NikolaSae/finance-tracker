@@ -1,38 +1,44 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import Countdown from "react-countdown";
 import { Typography, Tooltip, Box } from "@mui/material";
 
 const SessionInfo = () => {
-  const { data: session, status, update } = useSession(); // Sada će raditi bez greške
-  const [timeLeft, setTimeLeft] = useState<string>("00h 00m");
-  const [debugInfo, setDebugInfo] = useState<string>("");
+  const { data: session, status } = useSession();
+  const [sessionExpiration, setSessionExpiration] = useState<Date | null>(null);
 
   useEffect(() => {
-    const calculateTime = () => {
-      if (session?.expires) {
-        const expiration = new Date(session.expires);
-        const now = new Date();
-        const diff = expiration.getTime() - now.getTime();
-        
-        const hours = Math.max(0, Math.floor(diff / (1000 * 60 * 60)));
-        const minutes = Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)));
-        
-        setTimeLeft(`${hours}h ${minutes}m`);
-        setDebugInfo(`Exp: ${session.expires} | Now: ${now.toISOString()}`);
-        
-        // Аутоматско освежавање сесије
-        if (diff < 5 * 60 * 1000) { // 5 минута пре истека
-          update();
-        }
-      }
-    };
+    if (session?.countdownFormatted) {
+      console.log('Session countdownFormatted:', session.countdownFormatted); // Debug log
 
-    calculateTime();
-    const interval = setInterval(calculateTime, 1000);
-    return () => clearInterval(interval);
-  }, [session, update]);
+      const regex = /(\d+) (\d{2}):(\d{2}):(\d{2})/;
+      const match = session.countdownFormatted.match(regex);
+
+      if (match) {
+        const days = parseInt(match[1], 10);
+        const hours = parseInt(match[2], 10);
+        const minutes = parseInt(match[3], 10);
+        const seconds = parseInt(match[4], 10);
+
+        // Debug logs for parsed values
+        console.log(`Parsed - Days: ${days}, Hours: ${hours}, Minutes: ${minutes}, Seconds: ${seconds}`);
+
+        const expiration = new Date();
+        expiration.setSeconds(expiration.getSeconds() + seconds);
+        expiration.setMinutes(expiration.getMinutes() + minutes);
+        expiration.setHours(expiration.getHours() + hours);
+        expiration.setDate(expiration.getDate() + days);
+
+        setSessionExpiration(expiration);
+      } else {
+        console.error('Countdown format is invalid:', session.countdownFormatted); // Error if regex doesn't match
+      }
+    } else {
+      console.error('session.countdownFormatted is missing or undefined');
+    }
+  }, [session?.countdownFormatted]);
 
   if (status !== "authenticated") return null;
 
@@ -43,7 +49,7 @@ const SessionInfo = () => {
         top: 8,
         right: 16,
         zIndex: 99999,
-        backgroundColor: "#1976d2",
+        backgroundColor: "#green", 
         color: "white",
         padding: "4px 12px",
         borderRadius: "4px",
@@ -53,16 +59,20 @@ const SessionInfo = () => {
         gap: "8px"
       }}
     >
-      <Tooltip title={
-        <div>
-          <div>{debugInfo}</div>
-          <div>User ID: {session.user.id}</div>
-          <div>Role: {session.user.role}</div>
-        </div>
-      }>
+      <Tooltip title="Session expiration countdown">
         <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span style={{ fontSize: "1.2em" }}>🔐</span>
-          <span>{timeLeft}</span>
+          {sessionExpiration ? (
+            <Countdown
+              date={sessionExpiration}
+              daysInHours={true}
+              renderer={({ days, hours, minutes, seconds }) => (
+                <span>{days}d {hours}h {minutes}m {seconds}s</span>
+              )}
+            />
+          ) : (
+            "Loading..."
+          )}
         </Typography>
       </Tooltip>
     </Box>

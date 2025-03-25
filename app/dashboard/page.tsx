@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 
 interface Ugovor {
   id: number;
@@ -33,22 +32,22 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!session?.user?.email || !mounted) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch(`/api/users/${encodeURIComponent(session.user.email)}`);
-        
+
         if (!response.ok) throw new Error(`HTTP greška! status: ${response.status}`);
-        
+
         const data = await response.json();
-        
+
         setStats({
           humanitarni: data.HumanitarniUgovori?.length || 0,
           postpaid: data.vas_postpaid?.length || 0,
           servisi: data.vas_servisi?.length || 0,
-          ugovori: data.HumanitarniUgovori || []
+          ugovori: data.HumanitarniUgovori || [],
         });
       } catch (error) {
         setError("Došlo je do greške pri učitavanju podataka");
@@ -108,7 +107,7 @@ export default function DashboardPage() {
               <Typography variant="h6" fontWeight="semibold" mb={2}>
                 Aktivni humanitarni ugovori
               </Typography>
-              
+
               {stats?.ugovori?.length ? (
                 <Box>
                   {stats.ugovori.map((ugovor) => (

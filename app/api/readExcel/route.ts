@@ -3,6 +3,14 @@ import { NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
+interface CellInfo {
+  address: string;
+  value: string | number | boolean | Date;
+  style: Record<string, unknown> | null;
+  font?: Record<string, unknown>;
+  fill?: Record<string, unknown>;
+  alignment?: Record<string, unknown>;
+}
 
 export async function GET() {
   // Putanja do Excel fajla na serveru (može biti u public direktorijumu ili bilo gde na serveru)
@@ -14,7 +22,7 @@ export async function GET() {
 
   // Čitanje svih ćelija i stilova
   const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-  const cellData: any[] = [];
+  const cellData: CellInfo[] = [];
 
   for (let row = range.s.r; row <= range.e.r; row++) {
     for (let col = range.s.c; col <= range.e.c; col++) {

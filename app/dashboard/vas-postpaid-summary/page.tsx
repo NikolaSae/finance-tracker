@@ -1,7 +1,6 @@
 // app/vas-postpaid-summary/page.tsx
 "use client";
 import { useState, useEffect } from "react";
-import Layout from "@/components/Layout";
 import {
   Box,
   Typography,
@@ -48,7 +47,7 @@ export default function VasPostpaidSummaryPage() {
   }, []);
 
   return (
-    <Layout>
+    <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
         Postpaid Summary
       </Typography>
@@ -83,6 +82,6 @@ export default function VasPostpaidSummaryPage() {
           </Table>
         </TableContainer>
       )}
-    </Layout>
+    </Box>
   );
 }

@@ -98,12 +98,12 @@ export async function PUT(
     }
 
     const rawData = await request.json();
-    const { 
-      id: _id, 
-      userId: _userId, 
-      user: _user, 
-      ...cleanData 
-    } = rawData;
+        const { 
+  id: _, // ESLint will ignore single underscore
+  userId: __, 
+  user: ___, 
+  ...cleanData 
+} = rawData;
 
     // 1. Osnovna validacija obaveznih polja
     const requiredFields = ['humanitarnaOrganizacija', 'ugovor', 'datumPocetka', 'datumIstekka'];

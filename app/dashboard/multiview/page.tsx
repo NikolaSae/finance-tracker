@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import Layout from "@/components/Layout";
 import NavbarMulti from "@/components/NavbarMulti";
 import NavbarPro from "@/components/NavbarPro";
 import {
@@ -227,149 +226,149 @@ const handleExport = (format: ExportFormat) => {
  
 
   return (
-    <Layout>
-      {/* NavbarPro - Handles provider selection */}
-      {session && (
-        <Box sx={{ marginBottom: 5 }}>
-          <NavbarPro
-            providers={allProviders}  // Pass the list of providers to the navbar
-            activeProvider={activeProvider}  // The currently selected provider
-            setActiveProvider={setActiveProvider}  // Function to change the active provider
-          />
-        </Box>
-      )}
-  
-      {/* NavbarMulti - Handles view selection */}
-      {session && (
-        <Box sx={{ marginTop: 5 }}>
-          <NavbarMulti 
-            activeView={activeView} 
-            setActiveView={setActiveView} 
-            viewsConfig={viewsConfig} 
-          />
-        </Box>
-      )}
-  
-      {/* Display user info from session */}
+  <Box sx={{ p: 3 }}>
+    {/* NavbarPro - Handles provider selection */}
+    {session && (
       <Box sx={{ marginBottom: 5 }}>
-        {session ? (
-          <Typography variant="h6" color="primary">
-            Dobrodošli, {session.user.name || session.user.email} {/* Display user name or email */}
-          </Typography>
-        ) : (
-          <Typography variant="h6" color="error">
-            You are not logged in. Please log in to access the data.
-          </Typography>
-        )}
+        <NavbarPro
+          providers={allProviders}
+          activeProvider={activeProvider}
+          setActiveProvider={setActiveProvider}
+        />
       </Box>
-  
-      <Typography variant="h4" gutterBottom sx={{
-        mb: 4,
-        backgroundColor: "#f0f0f0", // Background color
-        padding: "10px", // Padding around the text
-      }}>
-        Finansijski Pregled
-      </Typography>
-  
-      
-  
-      <Grid container spacing={3}>
-        {viewsConfig
-          .filter((view) => view.name === activeView)
-          .map((view) => (
-            <Grid item xs={12} key={view.name} sx={{ minHeight: 300 }}>
-              <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
-                <Typography variant="h6" gutterBottom>
-                  {view.title}
-                  {/* Export Buttons */}
-      <Box sx={{ marginBottom: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => handleExport('csv')}
-          sx={{ marginRight: 2 }}
-        >
-          Export to CSV
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => handleExport('excel')}
-          sx={{ marginRight: 2 }}
-        >
-          Export to Excel
-        </Button>
-        <Button
-          variant="contained"
-          color="default"
-          onClick={() => handleExport('pdf')}
-        >
-          Export to PDF
-        </Button>
+    )}
+
+    {/* NavbarMulti - Handles view selection */}
+    {session && (
+      <Box sx={{ marginTop: 5 }}>
+        <NavbarMulti 
+          activeView={activeView} 
+          setActiveView={setActiveView} 
+          viewsConfig={viewsConfig} 
+        />
       </Box>
+    )}
+
+    {/* Display user info from session */}
+    <Box sx={{ marginBottom: 5 }}>
+      {session ? (
+        <Typography variant="h6" color="primary">
+          Dobrodošli, {session.user.name || session.user.email}
+        </Typography>
+      ) : (
+        <Typography variant="h6" color="error">
+          You are not logged in. Please log in to access the data.
+        </Typography>
+      )}
+    </Box>
+
+    <Typography variant="h4" gutterBottom sx={{
+      mb: 4,
+      backgroundColor: "#f0f0f0",
+      padding: "10px",
+    }}>
+      Finansijski Pregled
+    </Typography>
+
+    {/* Export Buttons */}
+    <Box sx={{ marginBottom: 3 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => handleExport('csv')}
+        sx={{ marginRight: 2 }}
+      >
+        Export to CSV
+      </Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={() => handleExport('excel')}
+        sx={{ marginRight: 2 }}
+      >
+        Export to Excel
+      </Button>
+      <Button
+        variant="contained"
+        color="default"
+        onClick={() => handleExport('pdf')}
+      >
+        Export to PDF
+      </Button>
+    </Box>
+
+    <Grid container spacing={3}>
+      {viewsConfig
+        .filter((view) => view.name === activeView)
+        .map((view) => (
+          <Grid item xs={12} key={view.name} sx={{ minHeight: 300 }}>
+            <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
+              <Typography variant="h6" gutterBottom>
+                {view.title}
+              </Typography>
+
+              {loading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : error ? (
+                <Typography color="error" sx={{ mt: 4, textAlign: "center" }}>
+                  {error}
                 </Typography>
-  
-                {loading ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-                    <CircularProgress />
-                  </Box>
-                ) : error ? (
-                  <Typography color="error" sx={{ mt: 4, textAlign: "center" }}>
-                    {error}
-                  </Typography>
-                ) : filteredData.length === 0 && !loading ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%"}}>
-                    <Typography variant="body1">U pripremi</Typography>
-                  </Box>
-                ) : (
-                  <TableContainer sx={{ border: "1px solid black", backgroundColor: '' }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow sx={{ borderBottom: "2px solid black", backgroundColor: 'lightgreen' }}>
-                          {view.columns.map((column, colIndex) => (
-                            <TableCell
-                              key={column}
-                              sx={{
-                                borderBottom: "2px solid black",
-                                backgroundColor: colIndex === 2 ? 'lightblue' : 'transparent', // Color the second column header
-                              }}
-                            >
-                              {column}
-                            </TableCell>
-                          ))}
+              ) : filteredData.length === 0 && !loading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%"}}>
+                  <Typography variant="body1">U pripremi</Typography>
+                </Box>
+              ) : (
+                <TableContainer sx={{ border: "1px solid black" }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ borderBottom: "2px solid black", backgroundColor: 'lightgreen' }}>
+                        {view.columns.map((column, colIndex) => (
+                          <TableCell
+                            key={column}
+                            sx={{
+                              borderBottom: "2px solid black",
+                              backgroundColor: colIndex === 2 ? 'lightblue' : 'transparent',
+                            }}
+                          >
+                            {column}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {filteredData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={view.columns.length} align="center">No data available</TableCell>
                         </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {filteredData.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={view.columns.length} align="center">No data available</TableCell>
+                      ) : (
+                        filteredData.map((row, rowIndex) => (
+                          <TableRow key={getRowKey(row)} sx={{ borderBottom: "1px solid black" }}>
+                            {view.columns.map((column, colIndex) => (
+                              <TableCell
+                                key={column}
+                                sx={{
+                                  borderBottom: "1px solid black",
+                                  backgroundColor: colIndex === 2 ? 'lightyellow' : 'transparent',
+                                }}
+                              >
+                                {row[column] || "N/A"}
+                              </TableCell>
+                            ))}
                           </TableRow>
-                        ) : (
-                          filteredData.map((row, rowIndex) => (
-                            <TableRow key={getRowKey(row)} sx={{ borderBottom: "1px solid black" }}>
-                              {view.columns.map((column, colIndex) => (
-                                <TableCell
-                                  key={column}
-                                  sx={{
-                                    borderBottom: "1px solid black",
-                                    backgroundColor: colIndex === 2 ? 'lightyellow' : 'transparent', // Color the second column in body
-                                  }}
-                                >
-                                  {row[column] || "N/A"}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                )}
-              </Paper>
-            </Grid>
-            ))}
-      </Grid>
-      <ToastContainer
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Paper>
+          </Grid>
+        ))}
+    </Grid>
+
+    <ToastContainer
       position="bottom-right"
       autoClose={3000}
       hideProgressBar={false}
@@ -380,6 +379,6 @@ const handleExport = (format: ExportFormat) => {
       draggable
       pauseOnHover
     />
-    </Layout>
-  );
+  </Box>
+);
 }

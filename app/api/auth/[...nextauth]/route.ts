@@ -34,7 +34,7 @@ export const authOptions = {
             }
           });
 
-          // Провера закључаног налога
+          // Check if account is locked
           if (user?.lockedUntil && new Date(user.lockedUntil) > new Date()) {
             throw new Error('Налог је закључан');
           }
@@ -55,14 +55,14 @@ export const authOptions = {
               data: {
                 loginAttempts: updatedAttempts,
                 lockedUntil: updatedAttempts >= 3 
-                  ? new Date(Date.now() + 900000) // 15 минута
+                  ? new Date(Date.now() + 900000) // 15 minutes lock
                   : null
               }
             });
             throw new Error('Невалидна лозинка');
           }
 
-          // Ресетуј бројач на успешну пријаву
+          // Reset login attempts on successful login
           await prisma.users.update({
             where: { id: user.id },
             data: {
@@ -94,16 +94,26 @@ export const authOptions = {
       if (trigger === "update") {
         return { ...token, ...session.user };
       }
-      
+
       if (user) {
+        const expiresIn = 60 * 60 * 24 * 7; // 7 days in seconds
+        const expirationDate = new Date(Date.now() + expiresIn * 1000); // Convert to milliseconds
+        expirationDate.setHours(23, 59, 59, 999); // Set to end of the day (23:59:59.999)
+
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
         token.email = user.email;
-        token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 дана
+
+        token.exp = Math.floor(expirationDate.getTime() / 1000); // Set expiration in seconds
+
+        // Store expiration time to calculate the countdown
+        token.countdown = expirationDate.getTime();
+        console.log('JWT expires value:', token.exp); // Log for debugging
       }
       return token;
     },
+
     async session({ session, token }) {
       if (token) {
         session.user = {
@@ -112,15 +122,30 @@ export const authOptions = {
           name: token.name,
           email: token.email
         };
-        session.expires = new Date(token.exp * 1000).toISOString();
+
+        const currentTime = Date.now();
+        const timeLeft = token.countdown - currentTime; // Time remaining in milliseconds
+
+        if (timeLeft > 0) {
+          // Calculate days, hours, minutes, and seconds
+          const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+          // Format the countdown as d hh:mm:ss
+          session.countdownFormatted = `${days} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        } else {
+          session.countdownFormatted = "Expired";
+        }
       }
       return session;
     }
   },
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60 * 24 * 7, // 7 дана
-    updateAge: 60 * 60 // Освежи сесију сваких сат времена
+    maxAge: 4 * 60 * 60, // 4 hours
+    updateAge: 60 * 60 // Refresh session every hour
   },
   pages: {
     signIn: '/auth/login',

@@ -1,28 +1,65 @@
-// app/api/export/route.ts
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import writeXlsxFile from 'write-excel-file/node';
 
-const SCHEMAS: { [key: string]: any[] } = {
+// Define interfaces for different row types
+interface TransactionRow {
+  id: number;
+  amount: number;
+  date: string;
+  description: string;
+  user_id: number;
+}
+
+interface UserRow {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  created_by: number;
+}
+
+interface InvoiceRow {
+  invoice_number: string;
+  issue_date: string;
+  total: number;
+  status: string;
+  user_id: number;
+}
+
+// Define schema type
+interface SchemaDefinition<T> {
+  column: string;
+  value: (row: T) => string | number | Date;
+  width?: number;
+  type?: typeof Number | typeof Date;
+  format?: string;
+}
+
+interface Schema {
+  [key: string]: SchemaDefinition<TransactionRow | UserRow | InvoiceRow>[];
+}
+
+const SCHEMAS: Schema = {
   transactions: [
-    { column: 'ID', value: (row: any) => row.id, width: 15 },
-    { column: 'Iznos', value: (row: any) => row.amount, type: Number, format: '#,##0.00' },
-    { column: 'Datum', value: (row: any) => new Date(row.date), type: Date, format: 'dd.mm.yyyy' },
-    { column: 'Opis', value: (row: any) => row.description, width: 40 }
+    { column: 'ID', value: (row: TransactionRow) => row.id, width: 15 },
+    { column: 'Iznos', value: (row: TransactionRow) => row.amount, type: Number, format: '#,##0.00' },
+    { column: 'Datum', value: (row: TransactionRow) => new Date(row.date), type: Date, format: 'dd.mm.yyyy' },
+    { column: 'Opis', value: (row: TransactionRow) => row.description, width: 40 }
   ],
   users: [
-    { column: 'ID', value: (row: any) => row.id, width: 15 },
-    { column: 'Ime', value: (row: any) => row.name, width: 25 },
-    { column: 'Email', value: (row: any) => row.email, width: 35 },
-    { column: 'Uloga', value: (row: any) => row.role, width: 20 }
+    { column: 'ID', value: (row: UserRow) => row.id, width: 15 },
+    { column: 'Ime', value: (row: UserRow) => row.name, width: 25 },
+    { column: 'Email', value: (row: UserRow) => row.email, width: 35 },
+    { column: 'Uloga', value: (row: UserRow) => row.role, width: 20 }
   ],
   invoices: [
-    { column: 'Broj fakture', value: (row: any) => row.invoice_number, width: 20 },
-    { column: 'Datum izdavanja', value: (row: any) => new Date(row.issue_date), type: Date, format: 'dd.mm.yyyy' },
-    { column: 'Iznos', value: (row: any) => row.total, type: Number, format: '#,##0.00' },
-    { column: 'Status', value: (row: any) => row.status, width: 15 }
+    { column: 'Broj fakture', value: (row: InvoiceRow) => row.invoice_number, width: 20 },
+    { column: 'Datum izdavanja', value: (row: InvoiceRow) => new Date(row.issue_date), type: Date, format: 'dd.mm.yyyy' },
+    { column: 'Iznos', value: (row: InvoiceRow) => row.total, type: Number, format: '#,##0.00' },
+    { column: 'Status', value: (row: InvoiceRow) => row.status, width: 15 }
   ]
 };
 
@@ -36,13 +73,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Niste autorizovani' }, { status: 401 });
     }
 
-    // Provera validnosti liste
     if (!SCHEMAS[list]) {
       return NextResponse.json({ error: 'Nepostojeca lista' }, { status: 400 });
     }
 
     let query = '';
-    const params: any[] = [session.user.id];
+    const params: string[] = [session.user.id];
     
     switch(list) {
       case 'transactions':
@@ -56,9 +92,9 @@ export async function GET(request: Request) {
         break;
     }
 
-    const { rows } = await pool.query(query, params);
+    const { rows } = await pool.query<TransactionRow | UserRow | InvoiceRow>(query, params);
     
-    const buffer = await writeXlsxFile(rows, {
+    const buffer = await writeXlsxFile(rows as (TransactionRow | UserRow | InvoiceRow)[], {
       schema: SCHEMAS[list],
       headerStyle: {
         fontWeight: 'bold',
