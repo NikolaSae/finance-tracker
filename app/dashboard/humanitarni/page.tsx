@@ -68,8 +68,25 @@ export default function HumanitarniPage() {
         loading={loading}
         error={error}
       />
+      <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
+      <UpdateContractForm
+        open={!!selectedContractId}
+        contractId={selectedContractId!}
+        onClose={() => setSelectedContractId(null)}
+        onUpdate={refreshContracts}
+      />
     </Box>
   );
+}
+
+interface ContractsTableWrapperProps {
+  contracts: any[]; // Replace with proper type
+  historyData: any; // Replace with proper type
+  loadHistory: (contractId: number) => void;
+  loadingHistoryId: number | null;
+  onEdit: (contractId: number) => void;
+  loading: boolean;
+  error: string | null;
 }
 
 const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
