@@ -86,33 +86,29 @@ export default function DashboardLayout({ children, session, status }) {
 
   return (
     <div>
-      {/* Navbar */}
       <Navbar />
-
-      {/* Dodajemo SessionInfo */}
       <SessionInfo session={session} />
-
-      {/* Dodajemo Circular Progress ako se učitava */}
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', paddingTop: '50px' }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        // Dodajemo FileUpload i ThemeSwitcher kada je učitavanje završeno
-        <Box sx={{ padding: "16px", marginTop: "80px" }}>
-          <FileUpload />
-          <ThemeSwitcher />
-        </Box>
-      )}
-
-      {/* Ostatak sadržaja dashboard-a */}
-      <div>
-        <h1>Welcome to the Dashboard, {session?.user?.name}</h1>
-        <p>Some other dashboard content...</p>
+      
+      <Box component="main" sx={{ 
+        padding: 3,
+        marginTop: '64px', // Space for fixed navbar
+        minHeight: 'calc(100vh - 64px)'
+      }}>
+        {!loading && (
+          <Box sx={{ mb: 4 }}>
+            <FileUpload />
+            <ThemeSwitcher />
+          </Box>
+        )}
         
-        {/* Ovo renderuje sve komponente koje su prosleđene kao children */}
-        {children}
-      </div>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          children
+        )}
+      </Box>
     </div>
   );
 }

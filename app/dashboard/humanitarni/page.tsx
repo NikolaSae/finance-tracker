@@ -13,15 +13,14 @@ import { useContracts } from "@/hooks/useContracts";
 import { useContractHistory } from "@/hooks/useContractHistory";
 import "react-toastify/dist/ReactToastify.css";
 
-const contractViewsConfig = React.useMemo(
-  () => [
-    { name: "active_contracts", title: "Aktivni ugovori" },
-    { name: "expired_contracts", title: "Neaktivni ugovori" },
-  ],
-  []
-);
-
 export default function HumanitarniPage() {
+  const contractViewsConfig = React.useMemo(
+    () => [
+      { name: "active_contracts", title: "Aktivni ugovori" },
+      { name: "expired_contracts", title: "Neaktivni ugovori" },
+    ],
+    []
+  );
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeView, setActiveView] = useState(contractViewsConfig[0].name);
@@ -37,14 +36,13 @@ export default function HumanitarniPage() {
 
   const handleFormSubmit = React.useCallback(async (newContract: any) => {
     try {
-      // Poziv API-ja za kreiranje ugovora se može implementirati ovde ili unutar Form komponente
       await refreshContracts();
       toast.success("Ugovor uspešno sačuvan");
       setOpenForm(false);
     } catch (err) {
       toast.error("Došlo je do greške pri čuvanju ugovora");
     }
-  },
+  }, [refreshContracts]);
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -59,6 +57,10 @@ export default function HumanitarniPage() {
       <Button variant="contained" color="primary" onClick={() => setOpenForm(true)} sx={{ mb: 4 }}>
         Dodaj novi ugovor
       </Button>
+      <HeaderSection />
+      <Button variant="contained" color="primary" onClick={() => setOpenForm(true)} sx={{ mb: 4 }}>
+        Dodaj novi ugovor
+      </Button>
       <MemoizedContractsTable 
         contracts={contracts}
         historyData={historyData}
@@ -67,6 +69,13 @@ export default function HumanitarniPage() {
         onEdit={handleEdit}
         loading={loading}
         error={error}
+      />
+      <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
+      <UpdateContractForm
+        open={!!selectedContractId}
+        contractId={selectedContractId!}
+        onClose={() => setSelectedContractId(null)}
+        onUpdate={refreshContracts}
       />
     </Box>
   );
