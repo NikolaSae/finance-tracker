@@ -45,15 +45,7 @@ export default function HumanitarniPage() {
   }, [refreshContracts]);
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Typography
-        variant="h4"
-        gutterBottom
-        sx={{ borderBottom: "1px solid black", paddingBottom: 2, marginBottom: 4 }}
-      >
-        Humanitarni ugovori
-      </Typography>
-      <NavbarMulti activeView={activeView} setActiveView={setActiveView} viewsConfig={contractViewsConfig} />
+    <Box sx={{ padding: 2, marginTop: '64px' }}>
       <HeaderSection activeView={activeView} setActiveView={setActiveView} contractViewsConfig={contractViewsConfig} />
       <Button variant="contained" color="primary" onClick={() => setOpenForm(true)} sx={{ mb: 4 }}>
         Dodaj novi ugovor
@@ -104,6 +96,12 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
   loading,
   error
 }) {
+  // Filter contracts based on active view
+  const filteredContracts = contracts?.filter(contract => 
+    activeView === 'active_contracts' 
+      ? contract.status === 'ACTIVE'
+      : contract.status === 'EXPIRED'
+  ) || [];
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -122,7 +120,7 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
 
   return (
     <ContractsTable
-      contracts={contracts}
+      contracts={filteredContracts}
       historyData={historyData}
       loadHistory={loadHistory}
       loadingHistoryId={loadingHistoryId}
