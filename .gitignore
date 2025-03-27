@@ -50,3 +50,4 @@ data/
 .idea/
 vendor/
 *.log
+.aider*
