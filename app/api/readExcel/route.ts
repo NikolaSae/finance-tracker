@@ -30,7 +30,7 @@ export async function GET() {
       const cell = worksheet[XLSX.utils.encode_cell(cellAddress)];
 
       if (cell) {
-        const cellInfo: any = {
+        const cellInfo: CellInfo = {
           address: XLSX.utils.encode_cell(cellAddress),
           value: cell.v,
           style: cell.s || null,

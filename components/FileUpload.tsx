@@ -19,7 +19,7 @@ export default function FileUpload() {
   const [status, setStatus] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
-    details?: any;
+    details?: unknown;
     logs?: string[];
   } | null>(null);
 

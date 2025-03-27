@@ -31,14 +31,13 @@ export async function POST(request: Request) {
 
     // Parse email for commands
     await prisma.emailProcessingLog.create({
-  data: {
-    messageId: emailData.messageId,
-    status: processingResult.status,
-    action: processingResult.action,
-    contractId: command?.contractId // Actually use the command here
-  }
-});
-    void command; // Explicitly mark as used
+      data: {
+        messageId: emailData.messageId,
+        status: processingResult.status,
+        action: processingResult.action,
+        contractId: command?.contractId
+      }
+    });
     let processingResult = { status: 'no_command', action: null };
 
     if (command) {

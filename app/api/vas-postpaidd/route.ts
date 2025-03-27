@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const externalData = await externalRes.json();
 
     // Validate and transform the external data as needed
-    const validatedData: VasPostpaidTable[] = externalData.data.map((item: any) => ({
+    const validatedData: VasPostpaidTable[] = externalData.data.map((item) => ({
       id: item.id,
       Proizvod: item.Proizvod,
       Mesec_pruzanja_usluge: item.Mesec_pruzanja_usluge,

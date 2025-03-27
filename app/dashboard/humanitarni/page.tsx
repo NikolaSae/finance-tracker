@@ -97,7 +97,7 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
   onEdit,
   loading,
   error
-}) {
+}: ContractsTableWrapperProps) {
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>

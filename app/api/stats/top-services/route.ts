@@ -109,7 +109,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: "Invalid model" }, { status: 400 });
     }
 
-    const formatted = result.map((item: any) => ({
+    const formatted = result.map((item) => ({
       name: item.Proizvod || item.naziv_servisa || item.service_name,
       count: item._sum.Broj_transakcija || item._sum.broj_transakcija || item._sum.message_parts || 0,
       amount: item._sum.Fakturisan_iznos || item._sum.fakturisani_iznos || 0

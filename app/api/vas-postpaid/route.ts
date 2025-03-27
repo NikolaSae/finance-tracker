@@ -17,8 +17,9 @@ export async function GET(request: Request) {
       ...(Mesec_pruzanja_usluge && { "Mesec_pruzanja_usluge": Mesec_pruzanja_usluge }),
       ...(Provajder && { Provajder: Provajder })
     };
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    // Pagination parameters (currently not used but kept for future use)
+    const _page = parseInt(searchParams.get('page') || '1');
+    const _pageSize = parseInt(searchParams.get('pageSize') || '20');
     const data = await prisma.vas_postpaid.findMany({
       where: whereClause,
       orderBy: {

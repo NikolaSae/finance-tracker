@@ -74,7 +74,7 @@ export default function ContractsTable({ contracts, historyData, loadHistory, lo
       if (!historyData[contractId]) {
         try {
           await loadHistory(contractId);
-        } catch (err) {
+        } catch (_err) {
           toast.error("Greška pri učitavanju istorije");
         }
       }
