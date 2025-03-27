@@ -44,7 +44,7 @@ export default function HumanitarniPage() {
     } catch (err) {
       toast.error("Došlo je do greške pri čuvanju ugovora");
     }
-  };
+  }, [refreshContracts]);
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -71,19 +71,6 @@ export default function HumanitarniPage() {
     </Box>
   );
 }
-
-const HeaderSection = React.memo(() => (
-  <>
-    <Typography
-      variant="h4"
-      gutterBottom
-      sx={{ borderBottom: "1px solid black", paddingBottom: 2, marginBottom: 4 }}
-    >
-      Humanitarni ugovori
-    </Typography>
-    <NavbarMulti activeView={activeView} setActiveView={setActiveView} viewsConfig={contractViewsConfig} />
-  </>
-));
 
 const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
   contracts,
@@ -120,22 +107,6 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
     />
   );
 });
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography color="error" sx={{ mt: 4, textAlign: "center" }}>
-          {error}
-        </Typography>
-      ) : (
-        <ContractsTable
-          contracts={contracts}
-          historyData={historyData}
-          loadHistory={loadHistory}
-          loadingHistoryId={loadingContractId}
-          onEdit={handleEdit}
-        />
-      )}
       <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
       <UpdateContractForm
         open={!!selectedContractId}
@@ -145,4 +116,3 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
       />
     </Box>
   );
-}
