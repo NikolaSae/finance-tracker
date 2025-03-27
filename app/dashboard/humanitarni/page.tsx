@@ -78,6 +78,7 @@ export default function HumanitarniPage() {
     </Box>
   );
 }
+}
 
 interface ContractsTableWrapperProps {
   contracts: any[]; // Replace with proper type
