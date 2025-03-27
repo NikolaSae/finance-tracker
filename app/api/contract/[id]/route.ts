@@ -99,9 +99,9 @@ export async function PUT(
 
     const rawData = await request.json();
         const { 
-  id: _, // ESLint will ignore single underscore
-  userId: __, 
-  user: ___, 
+  id: _id,
+  userId: _userId, 
+  user: _user, 
   ...cleanData 
 } = rawData;
 
