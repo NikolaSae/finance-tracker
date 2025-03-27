@@ -29,7 +29,7 @@ interface FormattedViewRow {
   Mesec_pruzanja_usluge: string;
   Provajder?: string;
   provider_name?: string;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }
 
 const formatMonthData = (data: FormattedViewRow[]): FormattedViewRow[] => {
@@ -87,7 +87,7 @@ const viewsConfig = [
 ] as const;
 
 export default function MultiViewPage() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [activeView, setActiveView] = useState<ViewConfig['name']>(viewsConfig[0].name);
   const [viewsData, setViewsData] = useState<{ [key: string]: FormattedViewRow[] }>(
     viewsConfig.reduce((acc, view) => ({ ...acc, [view.name]: [] }), {})
@@ -101,7 +101,7 @@ export default function MultiViewPage() {
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const fetchData = async () => {
-      if (!session || viewsData[activeView].length > 0) {
+      if (!session?.user || viewsData[activeView].length > 0) {
         setLoading(false);
         return;
       }
@@ -183,7 +183,7 @@ const handleExport = (format: ExportFormat) => {
       .toLocaleDateString('sr-RS')
       .replace(/\//g, '-')}`;
 
-    const exportData = filteredData.map(row => {
+    const exportData: Array<Record<string, string | number>> = filteredData.map(row => {
       const newRow = { ...row };
       delete newRow.id;
       return newRow;
@@ -343,7 +343,7 @@ const handleExport = (format: ExportFormat) => {
                           <TableCell colSpan={view.columns.length} align="center">No data available</TableCell>
                         </TableRow>
                       ) : (
-                        filteredData.map((row, rowIndex) => (
+                        filteredData.map((row) => (
                           <TableRow key={getRowKey(row)} sx={{ borderBottom: "1px solid black" }}>
                             {view.columns.map((column, colIndex) => (
                               <TableCell
