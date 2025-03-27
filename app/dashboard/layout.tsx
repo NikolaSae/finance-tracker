@@ -74,15 +74,22 @@ import FileUpload from "../../components/FileUpload";
 import ThemeSwitcher from "../../components/providers/ThemeSwitcher";
 
 // Dashboard Layout with additional components
-export default function DashboardLayout({ children, session, status }) {
-  const [loading, setLoading] = useState(true);
+export default function DashboardLayout({ children }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  useEffect(() => {
-    // Simulacija učitavanja
-    if (session) {
-      setLoading(false);
-    }
-  }, [session]);
+  if (status === "loading") {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', height: '100vh', alignItems: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    router.push('/auth/login');
+    return null;
+  }
 
   return (
     <div>
@@ -91,23 +98,14 @@ export default function DashboardLayout({ children, session, status }) {
       
       <Box component="main" sx={{ 
         padding: 3,
-        marginTop: '64px', // Space for fixed navbar
+        marginTop: '64px',
         minHeight: 'calc(100vh - 64px)'
       }}>
-        {!loading && (
-          <Box sx={{ mb: 4 }}>
-            <FileUpload />
-            <ThemeSwitcher />
-          </Box>
-        )}
-        
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          children
-        )}
+        <Box sx={{ mb: 4 }}>
+          <FileUpload />
+          <ThemeSwitcher />
+        </Box>
+        {children}
       </Box>
     </div>
   );
