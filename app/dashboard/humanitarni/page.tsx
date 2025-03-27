@@ -54,10 +54,7 @@ export default function HumanitarniPage() {
         Humanitarni ugovori
       </Typography>
       <NavbarMulti activeView={activeView} setActiveView={setActiveView} viewsConfig={contractViewsConfig} />
-      <Button variant="contained" color="primary" onClick={() => setOpenForm(true)} sx={{ mb: 4 }}>
-        Dodaj novi ugovor
-      </Button>
-      <HeaderSection />
+      <HeaderSection activeView={activeView} setActiveView={setActiveView} contractViewsConfig={contractViewsConfig} />
       <Button variant="contained" color="primary" onClick={() => setOpenForm(true)} sx={{ mb: 4 }}>
         Dodaj novi ugovor
       </Button>
@@ -81,7 +78,11 @@ export default function HumanitarniPage() {
   );
 }
 
-const HeaderSection = React.memo(() => (
+const HeaderSection = React.memo(({ activeView, setActiveView, contractViewsConfig }: { 
+  activeView: string;
+  setActiveView: (view: string) => void;
+  contractViewsConfig: Array<{name: string, title: string}>;
+}) => (
   <>
     <Typography
       variant="h4"
@@ -124,7 +125,7 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
       contracts={contracts}
       historyData={historyData}
       loadHistory={loadHistory}
-      loadingHistoryId={loadingContractId}
+      loadingHistoryId={loadingHistoryId}
       onEdit={onEdit}
     />
   );
