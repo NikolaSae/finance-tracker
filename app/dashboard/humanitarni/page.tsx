@@ -130,29 +130,3 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
     />
   );
 });
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography color="error" sx={{ mt: 4, textAlign: "center" }}>
-          {error}
-        </Typography>
-      ) : (
-        <ContractsTable
-          contracts={contracts}
-          historyData={historyData}
-          loadHistory={loadHistory}
-          loadingHistoryId={loadingContractId}
-          onEdit={handleEdit}
-        />
-      )}
-      <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
-      <UpdateContractForm
-        open={!!selectedContractId}
-        contractId={selectedContractId!}
-        onClose={() => setSelectedContractId(null)}
-        onUpdate={refreshContracts}
-      />
-    </Box>
-  );
-}
