@@ -27,7 +27,7 @@ export default function HumanitarniPage() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
 
-  const { contracts, error, loading, refreshContracts } = useContracts(session?.accessToken, status, router);
+  const { contracts, error, loading, refreshContracts } = useContracts(session?.user?.accessToken, status, router);
   const { historyData, loadingContractId, loadHistory } = useContractHistory();
 
   const handleEdit = React.useCallback((contractId: number) => {
@@ -58,7 +58,7 @@ export default function HumanitarniPage() {
         onEdit={handleEdit}
         loading={loading}
         error={error}
-      />
+        activeView={activeView}
       <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
       <UpdateContractForm
         open={!!selectedContractId}
@@ -94,7 +94,8 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
   loadingHistoryId,
   onEdit,
   loading,
-  error
+  error,
+  activeView
 }) {
   // Filter contracts based on active view
   const filteredContracts = contracts?.filter(contract => 
