@@ -44,7 +44,7 @@ export default function HumanitarniPage() {
     } catch (err) {
       toast.error("Došlo je do greške pri čuvanju ugovora");
     }
-  };
+  },
 
   return (
     <Box sx={{ padding: 2 }}>
