@@ -13,21 +13,22 @@ import { useContracts } from "@/hooks/useContracts";
 import { useContractHistory } from "@/hooks/useContractHistory";
 import "react-toastify/dist/ReactToastify.css";
 
+const contractViewsConfig = React.useMemo(
+  () => [
+    { name: "active_contracts", title: "Aktivni ugovori" },
+    { name: "expired_contracts", title: "Neaktivni ugovori" },
+  ],
+  []
+);
+
 export default function HumanitarniPage() {
-  const contractViewsConfig = React.useMemo(
-    () => [
-      { name: "active_contracts", title: "Aktivni ugovori" },
-      { name: "expired_contracts", title: "Neaktivni ugovori" },
-    ],
-    []
-  );
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeView, setActiveView] = useState(contractViewsConfig[0].name);
   const [openForm, setOpenForm] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
 
-  const { contracts, error, loading, refreshContracts } = useContracts(session?.user?.accessToken, status, router);
+  const { contracts, error, loading, refreshContracts } = useContracts(session?.accessToken, status, router);
   const { historyData, loadingContractId, loadHistory } = useContractHistory();
 
   const handleEdit = React.useCallback((contractId: number) => {
@@ -36,17 +37,25 @@ export default function HumanitarniPage() {
 
   const handleFormSubmit = React.useCallback(async (newContract: any) => {
     try {
+      // Poziv API-ja za kreiranje ugovora se može implementirati ovde ili unutar Form komponente
       await refreshContracts();
       toast.success("Ugovor uspešno sačuvan");
       setOpenForm(false);
     } catch (err) {
       toast.error("Došlo je do greške pri čuvanju ugovora");
     }
-  }, [refreshContracts]);
+  };
 
   return (
-    <Box sx={{ padding: 2, marginTop: '64px' }}>
-      <HeaderSection activeView={activeView} setActiveView={setActiveView} contractViewsConfig={contractViewsConfig} />
+    <Box sx={{ padding: 2 }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{ borderBottom: "1px solid black", paddingBottom: 2, marginBottom: 4 }}
+      >
+        Humanitarni ugovori
+      </Typography>
+      <NavbarMulti activeView={activeView} setActiveView={setActiveView} viewsConfig={contractViewsConfig} />
       <Button variant="contained" color="primary" onClick={() => setOpenForm(true)} sx={{ mb: 4 }}>
         Dodaj novi ugovor
       </Button>
@@ -58,23 +67,12 @@ export default function HumanitarniPage() {
         onEdit={handleEdit}
         loading={loading}
         error={error}
-        activeView={activeView}
-      <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
-      <UpdateContractForm
-        open={!!selectedContractId}
-        contractId={selectedContractId!}
-        onClose={() => setSelectedContractId(null)}
-        onUpdate={refreshContracts}
       />
     </Box>
   );
 }
 
-const HeaderSection = React.memo(({ activeView, setActiveView, contractViewsConfig }: { 
-  activeView: string;
-  setActiveView: (view: string) => void;
-  contractViewsConfig: Array<{name: string, title: string}>;
-}) => (
+const HeaderSection = React.memo(() => (
   <>
     <Typography
       variant="h4"
@@ -94,15 +92,8 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
   loadingHistoryId,
   onEdit,
   loading,
-  error,
-  activeView
+  error
 }) {
-  // Filter contracts based on active view
-  const filteredContracts = contracts?.filter(contract => 
-    activeView === 'active_contracts' 
-      ? contract.status === 'ACTIVE'
-      : contract.status === 'EXPIRED'
-  ) || [];
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -121,11 +112,37 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
 
   return (
     <ContractsTable
-      contracts={filteredContracts}
+      contracts={contracts}
       historyData={historyData}
       loadHistory={loadHistory}
-      loadingHistoryId={loadingHistoryId}
+      loadingHistoryId={loadingContractId}
       onEdit={onEdit}
     />
   );
 });
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error" sx={{ mt: 4, textAlign: "center" }}>
+          {error}
+        </Typography>
+      ) : (
+        <ContractsTable
+          contracts={contracts}
+          historyData={historyData}
+          loadHistory={loadHistory}
+          loadingHistoryId={loadingContractId}
+          onEdit={handleEdit}
+        />
+      )}
+      <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
+      <UpdateContractForm
+        open={!!selectedContractId}
+        contractId={selectedContractId!}
+        onClose={() => setSelectedContractId(null)}
+        onUpdate={refreshContracts}
+      />
+    </Box>
+  );
+}
