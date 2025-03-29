@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcryptjs from 'bcryptjs';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -89,6 +90,11 @@ export const authOptions = {
       }
     })
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 86400 * 7, // 7 dana
+    updateAge: 86400, // Osveži token svaki dan
+  },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (trigger === "update") {
@@ -96,7 +102,8 @@ export const authOptions = {
       }
 
       if (user) {
-        const expiresIn = 60 * 60 * 24 * 7; // 7 days in seconds
+        const expiresIn = 60 * 60 * 24 * 7; // 7 dana u sekundama
+        token.jti = crypto.randomBytes(16).toString('hex');
         const expirationDate = new Date(Date.now() + expiresIn * 1000); // Convert to milliseconds
         expirationDate.setHours(23, 59, 59, 999); // Set to end of the day (23:59:59.999)
 
