@@ -78,7 +78,6 @@ export default function HumanitarniPage() {
     </Box>
   );
 }
-}
 
 interface ContractsTableWrapperProps {
   contracts: any[]; // Replace with proper type
@@ -127,7 +126,7 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
 });
       <Form open={openForm} handleClose={() => setOpenForm(false)} handleSubmit={handleFormSubmit} />
       <UpdateContractForm
-        open={!!selectedContractId}
+        open=Boolean(selectedContractId)
         contractId={selectedContractId!}
         onClose={() => setSelectedContractId(null)}
         onUpdate={refreshContracts}
