@@ -54,8 +54,8 @@ export async function POST(req: Request) {
       data: {
         humanitarnaOrganizacija: body.humanitarnaOrganizacija,
         ugovor: body.ugovor,
-        datumPocetka: body.datumPocetka ? new Date(body.datumPocetka) : null,
-        datumIstekka: body.datumIstekka ? new Date(body.datumIstekka) : null,
+        datumPocetka: new Date(body.datumPocetka),
+        datumIstekka: new Date(body.datumIstekka),
         kratkiBroj: body.kratkiBroj || null,
         telefon: body.telefon || null,
         email: body.email || null,
@@ -63,7 +63,9 @@ export async function POST(req: Request) {
         racun: body.racun || null,
         banka: body.banka || null,
         mb: body.mb || null,
-        userId: session.user.id,
+        userId: parseInt(session.user.id), // Convert string ID to number
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 

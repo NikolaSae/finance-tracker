@@ -52,13 +52,13 @@ const Form: React.FC<FormProps> = ({ open, handleClose, handleSubmit }) => {
         ugovor,
         datumPocetka,
         datumIstekka,
-        kratkiBroj,
-        telefon,
-        email,
-        pib,
-        racun,
-        banka,
-        mb,
+        kratkiBroj: kratkiBroj || null,
+        telefon: telefon || null,
+        email: email || null,
+        pib: pib || null,
+        racun: racun || null,
+        banka: banka || null,
+        mb: mb || null,
       });
       // Clear the form after submission
       setHumanitarnaOrganizacija("");
