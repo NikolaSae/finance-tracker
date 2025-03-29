@@ -13,13 +13,10 @@ import { useContracts } from "@/hooks/useContracts";
 import { useContractHistory } from "@/hooks/useContractHistory";
 import "react-toastify/dist/ReactToastify.css";
 
-const contractViewsConfig = useMemo(
-  () => [
-    { name: "active_contracts", title: "Aktivni ugovori" },
-    { name: "expired_contracts", title: "Neaktivni ugovori" },
-  ],
-  []
-);
+const contractViewsConfig = [
+  { name: "active_contracts", title: "Aktivni ugovori" },
+  { name: "expired_contracts", title: "Neaktivni ugovori" },
+];
 
 export default function HumanitarniPage() {
   const { data: session, status } = useSession();
@@ -35,11 +32,11 @@ export default function HumanitarniPage() {
   );
   const { historyData, loadingContractId, loadHistory } = useContractHistory();
 
-  const handleEdit = React.useCallback((contractId: number) => {
+  const handleEdit = useCallback((contractId: number) => {
     setSelectedContractId(contractId);
   }, []);
 
-  const handleFormSubmit = React.useCallback(async (newContract: any) => {
+  const handleFormSubmit = useCallback(async (newContract: any) => {
     try {
       // Poziv API-ja za kreiranje ugovora se može implementirati ovde ili unutar Form komponente
       await refreshContracts();

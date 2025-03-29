@@ -32,9 +32,11 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
-      console.error("Unauthorized");
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!session || session.user.role !== 'admin') {
+      console.error("Unauthorized access attempt");
+      return NextResponse.json({ 
+        message: "Permission denied: Admin access required" 
+      }, { status: 403 });
     }
 
     const body = await req.json();

@@ -90,11 +90,6 @@ export const authOptions = {
       }
     })
   ],
-  session: {
-    strategy: "jwt",
-    maxAge: 86400 * 7, // 7 dana
-    updateAge: 86400, // Osveži token svaki dan
-  },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (trigger === "update") {
