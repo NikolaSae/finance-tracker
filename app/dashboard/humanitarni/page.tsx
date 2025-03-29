@@ -1,6 +1,6 @@
 // app/dashboard/humanitarni/humanitarni.tsx
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Box, Typography, CircularProgress, Button } from "@mui/material";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
@@ -13,7 +13,7 @@ import { useContracts } from "@/hooks/useContracts";
 import { useContractHistory } from "@/hooks/useContractHistory";
 import "react-toastify/dist/ReactToastify.css";
 
-const contractViewsConfig = React.useMemo(
+const contractViewsConfig = useMemo(
   () => [
     { name: "active_contracts", title: "Aktivni ugovori" },
     { name: "expired_contracts", title: "Neaktivni ugovori" },
@@ -28,7 +28,11 @@ export default function HumanitarniPage() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
 
-  const { contracts, error, loading, refreshContracts } = useContracts(session?.accessToken, status, router);
+  const { contracts, error, loading, refreshContracts } = useContracts(
+    session?.accessToken ?? '',
+    status ?? 'unauthenticated',
+    router
+  );
   const { historyData, loadingContractId, loadHistory } = useContractHistory();
 
   const handleEdit = React.useCallback((contractId: number) => {
@@ -89,7 +93,7 @@ interface ContractsTableWrapperProps {
   error: string | null;
 }
 
-const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
+const MemoizedContractsTable = memo(function ContractsTableWrapper({
   contracts,
   historyData,
   loadHistory,
