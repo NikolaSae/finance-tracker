@@ -39,11 +39,17 @@ export default function HumanitarniPage() {
   const handleFormSubmit = useCallback(async (newContract: any) => {
     try {
       // Poziv API-ja za kreiranje ugovora se može implementirati ovde ili unutar Form komponente
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Došlo je do greške pri čuvanju ugovora");
+      }
+      
       await refreshContracts();
       toast.success("Ugovor uspešno sačuvan");
       setOpenForm(false);
     } catch (err) {
-      toast.error("Došlo je do greške pri čuvanju ugovora");
+      console.error('Greška pri čuvanju ugovora:', err);
+      toast.error(err.message || "Došlo je do greške pri čuvanju ugovora");
     }
   }, [refreshContracts]);
 

@@ -72,7 +72,6 @@ const Form: React.FC<FormProps> = ({ open, handleClose, handleSubmit }) => {
       setRacun("");
       setBanka("");
       setMb("");
-      setAneks_1("");
       handleClose();
     }
   };
