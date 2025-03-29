@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Box, Typography, Button, CircularProgress, Alert, Paper } from "@mui/material";
-import ScanButton from "@/components/ScanButton";
+import ScanButton from "@/app/components/ScanButton";
 
 export default function ScanPage() {
   const { data: session } = useSession();
