@@ -23,10 +23,12 @@ export const authOptions: NextAuthOptions = {
         if (!user) return null;
 
         // 2. Провери лозинку
-        const isValid = await bcrypt.compare(
-          credentials!.password,
-          user.password || "" // Fallback за TypeScript
-        );
+        const pepperedPassword = credentials!.password + (process.env.BCRYPT_PEPPER || '');
+        const isValid = await new Promise(resolve => {
+          bcrypt.compare(pepperedPassword, user.password || '', (err, result) => {
+            setTimeout(() => resolve(result), 500);
+          });
+        });
 
         // 3. Врати објекат који ће бити сачуван у токену
         return isValid ? {
