@@ -76,9 +76,11 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Error creating contract:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Error creating contract:', errorMessage);
     return NextResponse.json(
-      { message: "Error creating contract", error: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+      { message: "Error creating contract", error: errorMessage },
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

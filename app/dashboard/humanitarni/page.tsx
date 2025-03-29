@@ -46,9 +46,17 @@ export default function HumanitarniPage() {
         },
         body: JSON.stringify(newContract)
       });
-      const result = await response.json();
+      const responseText = await response.text();
+      let result;
+      try {
+        result = responseText ? JSON.parse(responseText) : {};
+      } catch (e) {
+        console.error('Invalid JSON response:', responseText);
+        throw new Error("Invalid server response format");
+      }
+      
       if (!response.ok) {
-        throw new Error(result.message || "Došlo je do greške pri čuvanju ugovora");
+        throw new Error(result.message || `Server error: ${response.status} ${response.statusText}`);
       }
       
       await refreshContracts();
