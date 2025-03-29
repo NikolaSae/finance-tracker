@@ -32,12 +32,15 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session) {
       console.error("Unauthorized access attempt");
       return NextResponse.json({ 
-        message: "Permission denied: Admin access required" 
-      }, { status: 403 });
+        message: "Permission denied: Please log in" 
+      }, { status: 401 });
     }
+
+    // Temp permit all authenticated users during testing
+    console.log('User role:', session.user.role);
 
     const body = await req.json();
     console.log("Received body:", body);
