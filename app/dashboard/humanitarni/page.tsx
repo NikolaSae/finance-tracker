@@ -124,5 +124,3 @@ const MemoizedContractsTable = React.memo(function ContractsTableWrapper({
     />
   );
 });
-    </Box>
-  );
