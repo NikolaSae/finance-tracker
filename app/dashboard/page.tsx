@@ -20,10 +20,15 @@ interface StatsData {
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState<StatsData>({
+    humanitarni: 0,
+    postpaid: 0,
+    servisi: 0,
+    ugovori: []
+  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const [mounted, setMounted] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);

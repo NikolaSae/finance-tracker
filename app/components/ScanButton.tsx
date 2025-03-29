@@ -3,9 +3,17 @@
 import { Button } from "@mui/material";
 import { useState } from "react";
 
+interface ScanResult {
+  id: number;
+  humanitarnaOrganizacija: string;
+  status: string;
+  isExpired: boolean;
+  paymentOverdue: boolean;
+}
+
 interface ScanButtonProps {
   onStart: () => void;
-  onComplete: (results: any[]) => void;
+  onComplete: (results: ScanResult[]) => void;
   onError: (message: string) => void;
   disabled?: boolean;
 }
@@ -16,7 +24,7 @@ export default function ScanButton({
   onError,
   disabled = false
 }: ScanButtonProps) {
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
 
   const handleScan = async () => {
     try {

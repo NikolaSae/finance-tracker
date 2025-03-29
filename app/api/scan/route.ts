@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+interface ContractScanResult {
+  id: number;
+  humanitarnaOrganizacija: string;
+  kratkiBroj?: string;
+  status: string;
+  isExpired: boolean;
+  paymentOverdue: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export async function POST() {
   try {
     // Scan contracts that need attention
-    const contractsToReview = await prisma.humanitarniUgovori.findMany({
+    const contractsToReview: ContractScanResult[] = await prisma.humanitarniUgovori.findMany({
       where: {
         OR: [
           { status: "NEEDS_REVIEW" },
