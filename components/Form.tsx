@@ -17,7 +17,6 @@ interface FormProps {
     racun: string;
     banka: string;
     mb: string;
-    aneks_1: string;
   }) => void;
 }
 
@@ -33,7 +32,6 @@ const Form: React.FC<FormProps> = ({ open, handleClose, handleSubmit }) => {
   const [racun, setRacun] = useState("");
   const [banka, setBanka] = useState("");
   const [mb, setMb] = useState("");
-  const [aneks_1, setAneks_1] = useState("");
 
   const onSubmit = () => {
     if (
@@ -47,8 +45,7 @@ const Form: React.FC<FormProps> = ({ open, handleClose, handleSubmit }) => {
       pib &&
       racun &&
       banka &&
-      mb &&
-      aneks_1
+      mb
     ) {
       handleSubmit({
         humanitarnaOrganizacija,
@@ -62,7 +59,6 @@ const Form: React.FC<FormProps> = ({ open, handleClose, handleSubmit }) => {
         racun,
         banka,
         mb,
-        aneks_1,
       });
       // Clear the form after submission
       setHumanitarnaOrganizacija("");
