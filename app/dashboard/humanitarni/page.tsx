@@ -120,7 +120,7 @@ const MemoizedContractsTable = memo(function ContractsTableWrapper({
       contracts={contracts}
       historyData={historyData}
       loadHistory={loadHistory}
-      loadingHistoryId={loadingContractId}
+      loadingHistoryId={loadingHistoryId}
       onEdit={onEdit}
     />
   );
