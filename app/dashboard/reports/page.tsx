@@ -24,17 +24,15 @@ import Navbar from "@/components/Navbar";
 const ReportsPage = () => {
   const { data: session, status } = useSession();
   const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [loadingUpload, setLoadingUpload] = useState(false);
-  const [loadingProcess, setLoadingProcess] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
-  const [exportMessages, setExportMessages] = useState<string[]>([]); // Poruke za ExportButton
-  const [puniMessages, setPuniMessages] = useState<string[]>([]); // Poruke za PuniButton
-  const [importMessages, setImportMessages] = useState<string[]>([]); // Poruke za ImportButton
+  const [fileName, setFileName] = useState<string>('');
+  const [loadingUpload, setLoadingUpload] = useState<boolean>(false);
+  const [loadingProcess, setLoadingProcess] = useState<boolean>(false);
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [exportMessages, setExportMessages] = useState<Array<string>>([]); // Poruke za ExportButton
+  const [puniMessages, setPuniMessages] = useState<Array<string>>([]); // Poruke za PuniButton
+  const [importMessages, setImportMessages] = useState<Array<string>>([]); // Poruke za ImportButton
   const [processedCount, setProcessedCount] = useState<number>(0); // Broj obrađenih redova
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
