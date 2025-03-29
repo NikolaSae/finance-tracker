@@ -75,6 +75,8 @@ export default function HumanitarniPage() {
         onClose={() => setSelectedContractId(null)}
         onUpdate={refreshContracts}
       />
+    </Box>
+  );
 }
 
 interface ContractsTableWrapperProps {
